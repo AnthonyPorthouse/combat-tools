@@ -4,10 +4,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { screenToWorld, worldToScreen, type CameraState } from '../utils/cameraMath'
 
 type CursorTrackerProps = {
-  camera: CameraState
+  camera: CameraState,
+  cursorRadius?: number
 }
 
-export const CursorTracker = ({ camera }: CursorTrackerProps) => {
+export const CursorTracker = ({ camera, cursorRadius = 3 }: CursorTrackerProps) => {
   const [screenCursorPos, setScreenCursorPos] = useState({ x: 0, y: 0 })
   const { app } = useApplication()
 
@@ -29,9 +30,9 @@ export const CursorTracker = ({ camera }: CursorTrackerProps) => {
 
     graphics.clear()
     graphics.setFillStyle({ color: 'red' })
-    graphics.rect(drawPos.x - 5, drawPos.y - 5, 10, 10)
+    graphics.circle(drawPos.x - cursorRadius / 2, drawPos.y - cursorRadius / 2, cursorRadius)
     graphics.fill()
-  }, [camera, screenCursorPos.x, screenCursorPos.y])
+  }, [camera, cursorRadius, screenCursorPos.x, screenCursorPos.y])
 
   return <pixiGraphics draw={drawCallback} />
 }
