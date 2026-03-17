@@ -34,5 +34,5 @@ export const CursorTracker = ({ camera, cursorRadius = 3 }: CursorTrackerProps) 
     graphics.fill()
   }, [camera, cursorRadius, screenCursorPos.x, screenCursorPos.y])
 
-  return <pixiGraphics draw={drawCallback} />
+  return <pixiGraphics draw={drawCallback} eventMode='none' />
 }
