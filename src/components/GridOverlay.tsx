@@ -24,20 +24,19 @@ export const GridOverlay = ({
   panY = 0,
 }: GridOverlayProps) => {
   const { app } = useApplication()
-  const [viewport, setViewport] = useState({
-    width: app.screen.width,
-    height: app.screen.height,
-  })
+  const [viewport, setViewport] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
     const handleResize = () => {
+      if (!app?.screen) return
       setViewport({
         width: app.screen.width,
         height: app.screen.height,
       })
     }
 
-    app.renderer.on('resize', handleResize)
+    handleResize()
+    app?.renderer.on('resize', handleResize)
 
     return () => {
       app.renderer.off('resize', handleResize)

@@ -29,7 +29,7 @@ export const CameraController = ({
     }
 
     const handlePointerDown = (event: FederatedPointerEvent) => {
-      if (event.button !== 1) {
+      if (event.button !== 2) {
         return
       }
 
@@ -72,6 +72,16 @@ export const CameraController = ({
   }, [app, camera.zoom, panBy])
 
   useEffect(() => {
+    if (!app) return
+    const view = app.canvas as HTMLCanvasElement | undefined
+    if (!view) return
+    const suppress = (e: MouseEvent) => e.preventDefault()
+    view.addEventListener('contextmenu', suppress)
+    return () => view.removeEventListener('contextmenu', suppress)
+  }, [app])
+
+  useEffect(() => {
+    if (!app) return
     const view = app.canvas as HTMLCanvasElement | undefined
 
     if (!view) {

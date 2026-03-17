@@ -2,9 +2,10 @@ import type { GridCell } from '../utils/cameraMath'
 
 type DebuggerOverlayProps = {
   gridCell: GridCell | null
+  hoveredToken: string | null
 }
 
-export const DebuggerOverlay = ({ gridCell }: DebuggerOverlayProps) => {
+export const DebuggerOverlay = ({ gridCell, hoveredToken }: DebuggerOverlayProps) => {
   const label = gridCell
     ? `Grid: (${gridCell.col}, ${gridCell.row})`
     : 'Grid: (--, --)'
@@ -29,6 +30,7 @@ export const DebuggerOverlay = ({ gridCell }: DebuggerOverlayProps) => {
       aria-live="polite"
     >
       {label}
+      {hoveredToken && <div>Token: {hoveredToken}</div>}
     </div>
   )
 }
