@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 'lts/*'
           cache: 'npm'
@@ -28,14 +28,10 @@ jobs:
         run: npm run coverage
 
       - name: Download coverage baseline
-        id: baseline
-        uses: dawidd6/action-download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
-          workflow: coverage-baseline.yml
-          branch: main
           name: coverage-baseline
-          path: coverage-baseline
-        continue-on-error: true
+          path: coverage/coverage-summary.json
 
       - name: Report coverage to PR
         uses: davelosert/vitest-coverage-report-action@v2

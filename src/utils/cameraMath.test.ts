@@ -10,7 +10,7 @@ import {
   type CameraState,
 } from './cameraMath'
 
-const identityCamera: CameraState = { zoom: 1, panX: 0, panY: 0 }
+const identityCamera: CameraState = { zoom: 1, pan: { x: 0, y: 0 } }
 
 describe('clampZoom', () => {
   it('returns the value unchanged when within range', () => {
@@ -50,25 +50,25 @@ describe('clampZoom', () => {
 
 describe('screenToWorld', () => {
   it('returns screen coords unchanged for an identity camera', () => {
-    const result = screenToWorld(100, 200, identityCamera)
+    const result = screenToWorld({ x: 100, y: 200 }, identityCamera)
     expect(result).toEqual({ x: 100, y: 200 })
   })
 
   it('divides screen coords by zoom', () => {
-    const camera: CameraState = { zoom: 2, panX: 0, panY: 0 }
-    const result = screenToWorld(100, 200, camera)
+    const camera: CameraState = { zoom: 2, pan: { x: 0, y: 0 } }
+    const result = screenToWorld({ x: 100, y: 200 }, camera)
     expect(result).toEqual({ x: 50, y: 100 })
   })
 
   it('adds pan offset to the result', () => {
-    const camera: CameraState = { zoom: 1, panX: 50, panY: 75 }
-    const result = screenToWorld(100, 200, camera)
+    const camera: CameraState = { zoom: 1, pan: { x: 50, y: 75 } }
+    const result = screenToWorld({ x: 100, y: 200 }, camera)
     expect(result).toEqual({ x: 150, y: 275 })
   })
 
   it('applies zoom and pan together', () => {
-    const camera: CameraState = { zoom: 2, panX: 10, panY: 20 }
-    const result = screenToWorld(100, 200, camera)
+    const camera: CameraState = { zoom: 2, pan: { x: 10, y: 20 } }
+    const result = screenToWorld({ x: 100, y: 200 }, camera)
     // screenX / zoom + panX = 100/2 + 10 = 60
     // screenY / zoom + panY = 200/2 + 20 = 120
     expect(result).toEqual({ x: 60, y: 120 })
@@ -77,27 +77,27 @@ describe('screenToWorld', () => {
 
 describe('worldToScreen', () => {
   it('returns world coords unchanged for an identity camera', () => {
-    const result = worldToScreen(100, 200, identityCamera)
+    const result = worldToScreen({ x: 100, y: 200 }, identityCamera)
     expect(result).toEqual({ x: 100, y: 200 })
   })
 
   it('multiplies world coords by zoom', () => {
-    const camera: CameraState = { zoom: 2, panX: 0, panY: 0 }
-    const result = worldToScreen(50, 100, camera)
+    const camera: CameraState = { zoom: 2, pan: { x: 0, y: 0 } }
+    const result = worldToScreen({ x: 50, y: 100 }, camera)
     expect(result).toEqual({ x: 100, y: 200 })
   })
 
   it('subtracts pan before applying zoom', () => {
-    const camera: CameraState = { zoom: 1, panX: 50, panY: 75 }
-    const result = worldToScreen(150, 275, camera)
+    const camera: CameraState = { zoom: 1, pan: { x: 50, y: 75 } }
+    const result = worldToScreen({ x: 150, y: 275 }, camera)
     expect(result).toEqual({ x: 100, y: 200 })
   })
 
   it('is the inverse of screenToWorld', () => {
-    const camera: CameraState = { zoom: 2, panX: 10, panY: 20 }
+    const camera: CameraState = { zoom: 2, pan: { x: 10, y: 20 } }
     const screen = { x: 100, y: 200 }
-    const world = screenToWorld(screen.x, screen.y, camera)
-    const backToScreen = worldToScreen(world.x, world.y, camera)
+    const world = screenToWorld(screen, camera)
+    const backToScreen = worldToScreen(world, camera)
     expect(backToScreen.x).toBeCloseTo(screen.x)
     expect(backToScreen.y).toBeCloseTo(screen.y)
   })
@@ -105,76 +105,74 @@ describe('worldToScreen', () => {
 
 describe('worldToGridCell', () => {
   it('maps world (0, 0) to cell (0, 0)', () => {
-    expect(worldToGridCell(0, 0, 64)).toEqual({ col: 0, row: 0 })
+    expect(worldToGridCell({ x: 0, y: 0 }, 64)).toEqual({ col: 0, row: 0 })
   })
 
   it('floors fractional world coords to the correct cell', () => {
-    expect(worldToGridCell(63.9, 63.9, 64)).toEqual({ col: 0, row: 0 })
-    expect(worldToGridCell(64, 64, 64)).toEqual({ col: 1, row: 1 })
-    expect(worldToGridCell(128.5, 192.7, 64)).toEqual({ col: 2, row: 3 })
+    expect(worldToGridCell({ x: 63.9, y: 63.9 }, 64)).toEqual({ col: 0, row: 0 })
+    expect(worldToGridCell({ x: 64, y: 64 }, 64)).toEqual({ col: 1, row: 1 })
+    expect(worldToGridCell({ x: 128.5, y: 192.7 }, 64)).toEqual({ col: 2, row: 3 })
   })
 
   it('handles negative world coordinates (floor towards -Infinity)', () => {
-    expect(worldToGridCell(-1, -1, 64)).toEqual({ col: -1, row: -1 })
-    expect(worldToGridCell(-64, -64, 64)).toEqual({ col: -1, row: -1 })
-    expect(worldToGridCell(-65, -65, 64)).toEqual({ col: -2, row: -2 })
+    expect(worldToGridCell({ x: -1, y: -1 }, 64)).toEqual({ col: -1, row: -1 })
+    expect(worldToGridCell({ x: -64, y: -64 }, 64)).toEqual({ col: -1, row: -1 })
+    expect(worldToGridCell({ x: -65, y: -65 }, 64)).toEqual({ col: -2, row: -2 })
   })
 
   it('falls back to gridSize 32 when gridSize is zero', () => {
-    expect(worldToGridCell(32, 64, 0)).toEqual({ col: 1, row: 2 })
+    expect(worldToGridCell({ x: 32, y: 64 }, 0)).toEqual({ col: 1, row: 2 })
   })
 
   it('falls back to gridSize 32 when gridSize is negative', () => {
-    expect(worldToGridCell(32, 64, -10)).toEqual({ col: 1, row: 2 })
+    expect(worldToGridCell({ x: 32, y: 64 }, -10)).toEqual({ col: 1, row: 2 })
   })
 
   it('falls back to gridSize 32 when gridSize is NaN', () => {
-    expect(worldToGridCell(32, 64, NaN)).toEqual({ col: 1, row: 2 })
+    expect(worldToGridCell({ x: 32, y: 64 }, NaN)).toEqual({ col: 1, row: 2 })
   })
 })
 
 describe('zoomAtScreenPoint', () => {
   it('returns the same camera state (with clamped zoom) when zoom is unchanged', () => {
-    const camera: CameraState = { zoom: 2, panX: 10, panY: 20 }
-    const result = zoomAtScreenPoint(camera, 100, 100, 2)
+    const camera: CameraState = { zoom: 2, pan: { x: 10, y: 20 } }
+    const result = zoomAtScreenPoint(camera, { x: 100, y: 100 }, 2)
     expect(result).toEqual({ ...camera, zoom: 2 })
   })
 
   it('preserves the world point under the screen point when zooming in', () => {
-    const camera: CameraState = { zoom: 1, panX: 0, panY: 0 }
-    const screenX = 200
-    const screenY = 150
+    const camera: CameraState = { zoom: 1, pan: { x: 0, y: 0 } }
+    const screen = { x: 200, y: 150 }
 
-    const worldBefore = screenToWorld(screenX, screenY, camera)
-    const newCamera = zoomAtScreenPoint(camera, screenX, screenY, 2)
-    const worldAfter = screenToWorld(screenX, screenY, newCamera)
+    const worldBefore = screenToWorld(screen, camera)
+    const newCamera = zoomAtScreenPoint(camera, screen, 2)
+    const worldAfter = screenToWorld(screen, newCamera)
 
     expect(worldAfter.x).toBeCloseTo(worldBefore.x)
     expect(worldAfter.y).toBeCloseTo(worldBefore.y)
   })
 
   it('preserves the world point under the screen point when zooming out', () => {
-    const camera: CameraState = { zoom: 4, panX: 50, panY: 50 }
-    const screenX = 300
-    const screenY = 200
+    const camera: CameraState = { zoom: 4, pan: { x: 50, y: 50 } }
+    const screen = { x: 300, y: 200 }
 
-    const worldBefore = screenToWorld(screenX, screenY, camera)
-    const newCamera = zoomAtScreenPoint(camera, screenX, screenY, 2)
-    const worldAfter = screenToWorld(screenX, screenY, newCamera)
+    const worldBefore = screenToWorld(screen, camera)
+    const newCamera = zoomAtScreenPoint(camera, screen, 2)
+    const worldAfter = screenToWorld(screen, newCamera)
 
     expect(worldAfter.x).toBeCloseTo(worldBefore.x)
     expect(worldAfter.y).toBeCloseTo(worldBefore.y)
   })
 
   it('clamps the resulting zoom to MIN_CAMERA_ZOOM', () => {
-    const camera: CameraState = { zoom: 1, panX: 0, panY: 0 }
-    const result = zoomAtScreenPoint(camera, 0, 0, 0)
+    const camera: CameraState = { zoom: 1, pan: { x: 0, y: 0 } }
+    const result = zoomAtScreenPoint(camera, { x: 0, y: 0 }, 0)
     expect(result.zoom).toBe(MIN_CAMERA_ZOOM)
   })
 
   it('clamps the resulting zoom to MAX_CAMERA_ZOOM', () => {
-    const camera: CameraState = { zoom: 1, panX: 0, panY: 0 }
-    const result = zoomAtScreenPoint(camera, 0, 0, 9999)
+    const camera: CameraState = { zoom: 1, pan: { x: 0, y: 0 } }
+    const result = zoomAtScreenPoint(camera, { x: 0, y: 0 }, 9999)
     expect(result.zoom).toBe(MAX_CAMERA_ZOOM)
   })
 })

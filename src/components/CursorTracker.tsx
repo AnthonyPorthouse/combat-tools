@@ -25,14 +25,14 @@ export const CursorTracker = ({ camera, cursorRadius = 3 }: CursorTrackerProps) 
   }, [app])
 
   const drawCallback = useCallback((graphics: Graphics) => {
-    const worldCursorPos = screenToWorld(screenCursorPos.x, screenCursorPos.y, camera)
-    const drawPos = worldToScreen(worldCursorPos.x, worldCursorPos.y, camera)
+    const worldCursorPos = screenToWorld(screenCursorPos, camera)
+    const drawPos = worldToScreen(worldCursorPos, camera)
 
     graphics.clear()
     graphics.setFillStyle({ color: 'red' })
     graphics.circle(drawPos.x - cursorRadius / 2, drawPos.y - cursorRadius / 2, cursorRadius)
     graphics.fill()
-  }, [camera, cursorRadius, screenCursorPos.x, screenCursorPos.y])
+  }, [camera, cursorRadius, screenCursorPos])
 
   return <pixiGraphics draw={drawCallback} eventMode='none' />
 }

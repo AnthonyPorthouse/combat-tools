@@ -111,7 +111,7 @@ export const TokenDisplay = ({
       ? position.y * gridSize + (gridSize - tokenWorldSize) / 2
       : position.y * gridSize
 
-  const { x: screenX, y: screenY } = worldToScreen(worldX, worldY, camera)
+  const { x: screenX, y: screenY } = worldToScreen({ x: worldX, y: worldY }, camera)
   const screenSize = tokenWorldSize * camera.zoom
   const screenRadius = screenSize / 2
   const fontSize = Math.max(8, Math.round(screenSize * TOKEN_FONT_SCALE))
@@ -168,8 +168,8 @@ export const TokenDisplay = ({
       const screenPos = dragScreenPosRef.current
       const finalPos: Vector2 = screenPos
         ? (() => {
-            const world = screenToWorld(screenPos.x, screenPos.y, cameraRef.current)
-            const cell = worldToGridCell(world.x, world.y, gridSizeRef.current)
+            const world = screenToWorld(screenPos, cameraRef.current)
+            const cell = worldToGridCell(world, gridSizeRef.current)
             return { x: cell.col, y: cell.row }
           })()
         : positionRef.current
