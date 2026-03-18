@@ -1,7 +1,8 @@
+import type { Vector2 } from '../lib/vector2'
+
 export type CameraState = {
   zoom: number
-  panX: number
-  panY: number
+  pan: Vector2
 }
 
 export type GridCell = {
@@ -25,50 +26,46 @@ export const clampZoom = (
 }
 
 export const screenToWorld = (
-  screenX: number,
-  screenY: number,
+  screen: Vector2,
   camera: CameraState,
-) => {
+): Vector2 => {
   const safeZoom = clampZoom(camera.zoom)
 
   return {
-    x: screenX / safeZoom + camera.panX,
-    y: screenY / safeZoom + camera.panY,
+    x: screen.x / safeZoom + camera.pan.x,
+    y: screen.y / safeZoom + camera.pan.y,
   }
 }
 
 export const worldToScreen = (
-  worldX: number,
-  worldY: number,
+  world: Vector2,
   camera: CameraState,
-) => {
+): Vector2 => {
   const safeZoom = clampZoom(camera.zoom)
 
   return {
-    x: (worldX - camera.panX) * safeZoom,
-    y: (worldY - camera.panY) * safeZoom,
+    x: (world.x - camera.pan.x) * safeZoom,
+    y: (world.y - camera.pan.y) * safeZoom,
   }
 }
 
 export const worldToGridCell = (
-  worldX: number,
-  worldY: number,
+  world: Vector2,
   gridSize: number,
 ): GridCell => {
   const safeGridSize = Number.isFinite(gridSize) && gridSize > 0 ? gridSize : 32
 
   return {
-    col: Math.floor(worldX / safeGridSize),
-    row: Math.floor(worldY / safeGridSize),
+    col: Math.floor(world.x / safeGridSize),
+    row: Math.floor(world.y / safeGridSize),
   }
 }
 
 export const zoomAtScreenPoint = (
   camera: CameraState,
-  screenX: number,
-  screenY: number,
+  screen: Vector2,
   nextZoom: number,
-) => {
+): CameraState => {
   const oldZoom = clampZoom(camera.zoom)
   const clampedNextZoom = clampZoom(nextZoom)
 
@@ -79,12 +76,14 @@ export const zoomAtScreenPoint = (
     }
   }
 
-  const worldX = screenX / oldZoom + camera.panX
-  const worldY = screenY / oldZoom + camera.panY
+  const worldX = screen.x / oldZoom + camera.pan.x
+  const worldY = screen.y / oldZoom + camera.pan.y
 
   return {
     zoom: clampedNextZoom,
-    panX: worldX - screenX / clampedNextZoom,
-    panY: worldY - screenY / clampedNextZoom,
+    pan: {
+      x: worldX - screen.x / clampedNextZoom,
+      y: worldY - screen.y / clampedNextZoom,
+    },
   }
 }

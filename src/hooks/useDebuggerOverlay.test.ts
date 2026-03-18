@@ -4,7 +4,7 @@ import { useDebuggerOverlay } from './useDebuggerOverlay'
 import type { RefObject } from 'react'
 import type { CameraState } from '../utils/cameraMath'
 
-const identityCamera: CameraState = { zoom: 1, panX: 0, panY: 0 }
+const identityCamera: CameraState = { zoom: 1, pan: { x: 0, y: 0 } }
 
 /** Build a container div with a canvas child whose bounding rect is configured. */
 function makeContainerWithCanvas(rect: DOMRect) {
@@ -124,7 +124,7 @@ describe('useDebuggerOverlay', () => {
     expect(result.current.gridCell).toEqual({ col: 1, row: 1 })
 
     // With pan=64 the world point shifts: world.x = 64/1 + 64 = 128 → col=2
-    rerender({ camera: { zoom: 1, panX: 64, panY: 64 } })
+    rerender({ camera: { zoom: 1, pan: { x: 64, y: 64 } } })
 
     expect(result.current.gridCell).toEqual({ col: 2, row: 2 })
   })

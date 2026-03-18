@@ -1,12 +1,12 @@
 import { useApplication } from '@pixi/react'
 import { Graphics } from 'pixi.js'
 import { useCallback, useEffect, useState } from 'react'
+import type { Vector2 } from '../lib/vector2'
 
 type GridOverlayProps = {
   size?: number
   zoom?: number
-  panX?: number
-  panY?: number
+  pan?: Vector2
 }
 
 const DEFAULT_GRID_SIZE = 32
@@ -20,8 +20,7 @@ const positiveModulo = (value: number, modulus: number) => {
 export const GridOverlay = ({
   size = DEFAULT_GRID_SIZE,
   zoom = 1,
-  panX = 0,
-  panY = 0,
+  pan = { x: 0, y: 0 },
 }: GridOverlayProps) => {
   const { app } = useApplication()
   const [viewport, setViewport] = useState({ width: 0, height: 0 })
@@ -60,8 +59,8 @@ export const GridOverlay = ({
     }
 
     // Pan is treated as world-space units, so it scales into screen-space before offsetting lines.
-    const panInScreenX = panX * safeZoom
-    const panInScreenY = panY * safeZoom
+    const panInScreenX = pan.x * safeZoom
+    const panInScreenY = pan.y * safeZoom
     const startX = -positiveModulo(panInScreenX, spacing)
     const startY = -positiveModulo(panInScreenY, spacing)
 
@@ -78,7 +77,7 @@ export const GridOverlay = ({
     }
 
     graphics.stroke()
-  }, [panX, panY, size, viewport.height, viewport.width, zoom])
+  }, [pan.x, pan.y, size, viewport.height, viewport.width, zoom])
 
   return <pixiGraphics draw={drawCallback} eventMode='none' />
 }

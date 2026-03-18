@@ -6,41 +6,37 @@ import {
   zoomAtScreenPoint,
   type CameraState,
 } from '../utils/cameraMath'
+import type { Vector2 } from '../lib/vector2'
 
 export type UseCameraOptions = {
   initialZoom?: number
-  initialPanX?: number
-  initialPanY?: number
+  initialPan?: Vector2
   minZoom?: number
   maxZoom?: number
 }
 
 export const useCamera = ({
   initialZoom = 1,
-  initialPanX = 0,
-  initialPanY = 0,
+  initialPan = { x: 0, y: 0 },
   minZoom = MIN_CAMERA_ZOOM,
   maxZoom = MAX_CAMERA_ZOOM,
 }: UseCameraOptions = {}) => {
   const [camera, setCamera] = useState<CameraState>(() => ({
     zoom: clampZoom(initialZoom, minZoom, maxZoom),
-    panX: initialPanX,
-    panY: initialPanY,
+    pan: initialPan,
   }))
 
-  const setPan = useCallback((panX: number, panY: number) => {
+  const setPan = useCallback((pan: Vector2) => {
     setCamera((current) => ({
       ...current,
-      panX,
-      panY,
+      pan,
     }))
   }, [])
 
-  const panBy = useCallback((deltaX: number, deltaY: number) => {
+  const panBy = useCallback((delta: Vector2) => {
     setCamera((current) => ({
       ...current,
-      panX: current.panX + deltaX,
-      panY: current.panY + deltaY,
+      pan: { x: current.pan.x + delta.x, y: current.pan.y + delta.y },
     }))
   }, [])
 
@@ -55,7 +51,7 @@ export const useCamera = ({
   )
 
   const zoomAt = useCallback(
-    (screenX: number, screenY: number, zoom: number) => {
+    (screen: Vector2, zoom: number) => {
       setCamera((current) => {
         const oldZoom = clampZoom(current.zoom, minZoom, maxZoom)
         const nextZoom = clampZoom(zoom, minZoom, maxZoom)
@@ -72,8 +68,7 @@ export const useCamera = ({
             ...current,
             zoom: oldZoom,
           },
-          screenX,
-          screenY,
+          screen,
           nextZoom,
         )
       })

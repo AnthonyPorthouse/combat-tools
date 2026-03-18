@@ -5,6 +5,7 @@ import {
   type CameraState,
   type GridCell,
 } from '../utils/cameraMath'
+import type { Vector2 } from '../lib/vector2'
 
 type UseDebuggerOverlayOptions = {
   camera: CameraState
@@ -12,17 +13,12 @@ type UseDebuggerOverlayOptions = {
   containerRef: RefObject<HTMLElement | null>
 }
 
-type ScreenPosition = {
-  x: number
-  y: number
-}
-
 export const useDebuggerOverlay = ({
   camera,
   gridSize = 32,
   containerRef,
 }: UseDebuggerOverlayOptions) => {
-  const [screenPosition, setScreenPosition] = useState<ScreenPosition | null>(null)
+  const [screenPosition, setScreenPosition] = useState<Vector2 | null>(null)
 
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
@@ -61,8 +57,8 @@ export const useDebuggerOverlay = ({
       return null
     }
 
-    const world = screenToWorld(screenPosition.x, screenPosition.y, camera)
-    return worldToGridCell(world.x, world.y, gridSize)
+    const world = screenToWorld(screenPosition, camera)
+    return worldToGridCell(world, gridSize)
   }, [camera, gridSize, screenPosition])
 
   return {

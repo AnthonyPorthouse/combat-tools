@@ -2,11 +2,12 @@ import { useApplication } from '@pixi/react'
 import { FederatedPointerEvent } from 'pixi.js'
 import { useEffect, useRef } from 'react'
 import type { CameraState } from '../utils/cameraMath'
+import type { Vector2 } from '../lib/vector2'
 
 type CameraControllerProps = {
   camera: CameraState
-  panBy: (deltaX: number, deltaY: number) => void
-  zoomAt: (screenX: number, screenY: number, zoom: number) => void
+  panBy: (delta: Vector2) => void
+  zoomAt: (screen: Vector2, zoom: number) => void
 }
 
 const SCREEN_PAN_SPEED = 700
@@ -19,7 +20,7 @@ export const CameraController = ({
 }: CameraControllerProps) => {
   const { app } = useApplication()
   const draggingRef = useRef(false)
-  const lastPointerRef = useRef<{ x: number; y: number } | null>(null)
+  const lastPointerRef = useRef<Vector2 | null>(null)
   const activeKeysRef = useRef(new Set<string>())
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export const CameraController = ({
       const deltaY = event.global.y - lastPointerRef.current.y
 
       if (deltaX !== 0 || deltaY !== 0) {
-        panBy(-deltaX / camera.zoom, -deltaY / camera.zoom)
+        panBy({ x: -deltaX / camera.zoom, y: -deltaY / camera.zoom })
       }
 
       lastPointerRef.current = {
@@ -96,7 +97,7 @@ export const CameraController = ({
       const screenY = event.clientY - bounds.top
       const zoomFactor = Math.exp(-event.deltaY * WHEEL_ZOOM_SENSITIVITY)
 
-      zoomAt(screenX, screenY, camera.zoom * zoomFactor)
+      zoomAt({ x: screenX, y: screenY }, camera.zoom * zoomFactor)
     }
 
     view.addEventListener('wheel', handleWheel, { passive: false })
@@ -159,7 +160,7 @@ export const CameraController = ({
       const deltaSeconds = app.ticker.deltaMS / 1000
       const worldStep = (SCREEN_PAN_SPEED * deltaSeconds) / camera.zoom
 
-      panBy(normalizedX * worldStep, normalizedY * worldStep)
+      panBy({ x: normalizedX * worldStep, y: normalizedY * worldStep })
     }
 
     window.addEventListener('keydown', handleKeyDown)

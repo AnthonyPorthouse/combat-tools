@@ -5,16 +5,16 @@ import { MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM, screenToWorld } from '../utils/camera
 
 describe('useCamera', () => {
   describe('initial state', () => {
-    it('defaults to zoom=1, panX=0, panY=0', () => {
+    it('defaults to zoom=1, pan={x:0,y:0}', () => {
       const { result } = renderHook(() => useCamera())
-      expect(result.current.camera).toEqual({ zoom: 1, panX: 0, panY: 0 })
+      expect(result.current.camera).toEqual({ zoom: 1, pan: { x: 0, y: 0 } })
     })
 
     it('applies custom initial values', () => {
       const { result } = renderHook(() =>
-        useCamera({ initialZoom: 2, initialPanX: 100, initialPanY: 200 }),
+        useCamera({ initialZoom: 2, initialPan: { x: 100, y: 200 } }),
       )
-      expect(result.current.camera).toEqual({ zoom: 2, panX: 100, panY: 200 })
+      expect(result.current.camera).toEqual({ zoom: 2, pan: { x: 100, y: 200 } })
     })
 
     it('clamps initialZoom to the minZoom bound', () => {
@@ -51,32 +51,32 @@ describe('useCamera', () => {
       const { result } = renderHook(() => useCamera())
 
       act(() => {
-        result.current.setPan(300, 400)
+        result.current.setPan({ x: 300, y: 400 })
       })
 
-      expect(result.current.camera.panX).toBe(300)
-      expect(result.current.camera.panY).toBe(400)
+      expect(result.current.camera.pan.x).toBe(300)
+      expect(result.current.camera.pan.y).toBe(400)
     })
 
     it('overwrites a previous pan value', () => {
       const { result } = renderHook(() => useCamera())
 
       act(() => {
-        result.current.setPan(300, 400)
+        result.current.setPan({ x: 300, y: 400 })
       })
       act(() => {
-        result.current.setPan(10, 20)
+        result.current.setPan({ x: 10, y: 20 })
       })
 
-      expect(result.current.camera.panX).toBe(10)
-      expect(result.current.camera.panY).toBe(20)
+      expect(result.current.camera.pan.x).toBe(10)
+      expect(result.current.camera.pan.y).toBe(20)
     })
 
     it('does not change the zoom', () => {
       const { result } = renderHook(() => useCamera({ initialZoom: 2 }))
 
       act(() => {
-        result.current.setPan(100, 100)
+        result.current.setPan({ x: 100, y: 100 })
       })
 
       expect(result.current.camera.zoom).toBe(2)
@@ -88,38 +88,38 @@ describe('useCamera', () => {
       const { result } = renderHook(() => useCamera())
 
       act(() => {
-        result.current.panBy(50, 75)
+        result.current.panBy({ x: 50, y: 75 })
       })
 
-      expect(result.current.camera.panX).toBe(50)
-      expect(result.current.camera.panY).toBe(75)
+      expect(result.current.camera.pan.x).toBe(50)
+      expect(result.current.camera.pan.y).toBe(75)
     })
 
     it('accumulates deltas across multiple calls', () => {
       const { result } = renderHook(() => useCamera())
 
       act(() => {
-        result.current.panBy(50, 75)
+        result.current.panBy({ x: 50, y: 75 })
       })
       act(() => {
-        result.current.panBy(-20, 25)
+        result.current.panBy({ x: -20, y: 25 })
       })
 
-      expect(result.current.camera.panX).toBe(30)
-      expect(result.current.camera.panY).toBe(100)
+      expect(result.current.camera.pan.x).toBe(30)
+      expect(result.current.camera.pan.y).toBe(100)
     })
 
     it('adds to an existing pan offset', () => {
       const { result } = renderHook(() =>
-        useCamera({ initialPanX: 100, initialPanY: 200 }),
+        useCamera({ initialPan: { x: 100, y: 200 } }),
       )
 
       act(() => {
-        result.current.panBy(10, -50)
+        result.current.panBy({ x: 10, y: -50 })
       })
 
-      expect(result.current.camera.panX).toBe(110)
-      expect(result.current.camera.panY).toBe(150)
+      expect(result.current.camera.pan.x).toBe(110)
+      expect(result.current.camera.pan.y).toBe(150)
     })
   })
 
@@ -156,15 +156,15 @@ describe('useCamera', () => {
 
     it('does not change the pan', () => {
       const { result } = renderHook(() =>
-        useCamera({ initialPanX: 100, initialPanY: 200 }),
+        useCamera({ initialPan: { x: 100, y: 200 } }),
       )
 
       act(() => {
         result.current.setZoom(2)
       })
 
-      expect(result.current.camera.panX).toBe(100)
-      expect(result.current.camera.panY).toBe(200)
+      expect(result.current.camera.pan.x).toBe(100)
+      expect(result.current.camera.pan.y).toBe(200)
     })
   })
 
@@ -173,7 +173,7 @@ describe('useCamera', () => {
       const { result } = renderHook(() => useCamera())
 
       act(() => {
-        result.current.zoomAt(0, 0, 3)
+        result.current.zoomAt({ x: 0, y: 0 }, 3)
       })
 
       expect(result.current.camera.zoom).toBe(3)
@@ -181,16 +181,15 @@ describe('useCamera', () => {
 
     it('adjusts pan so the world point under the screen point is preserved', () => {
       const { result } = renderHook(() => useCamera())
-      const screenX = 200
-      const screenY = 150
+      const screen = { x: 200, y: 150 }
 
-      const worldBefore = screenToWorld(screenX, screenY, result.current.camera)
+      const worldBefore = screenToWorld(screen, result.current.camera)
 
       act(() => {
-        result.current.zoomAt(screenX, screenY, 4)
+        result.current.zoomAt(screen, 4)
       })
 
-      const worldAfter = screenToWorld(screenX, screenY, result.current.camera)
+      const worldAfter = screenToWorld(screen, result.current.camera)
 
       expect(worldAfter.x).toBeCloseTo(worldBefore.x)
       expect(worldAfter.y).toBeCloseTo(worldBefore.y)
@@ -198,22 +197,22 @@ describe('useCamera', () => {
 
     it('does not change pan when zoom level is already at the target', () => {
       const { result } = renderHook(() =>
-        useCamera({ initialZoom: 2, initialPanX: 50, initialPanY: 50 }),
+        useCamera({ initialZoom: 2, initialPan: { x: 50, y: 50 } }),
       )
 
       act(() => {
-        result.current.zoomAt(100, 100, 2)
+        result.current.zoomAt({ x: 100, y: 100 }, 2)
       })
 
-      expect(result.current.camera.panX).toBe(50)
-      expect(result.current.camera.panY).toBe(50)
+      expect(result.current.camera.pan.x).toBe(50)
+      expect(result.current.camera.pan.y).toBe(50)
     })
 
     it('clamps the zoom to the configured maxZoom', () => {
       const { result } = renderHook(() => useCamera({ maxZoom: 4 }))
 
       act(() => {
-        result.current.zoomAt(0, 0, 999)
+        result.current.zoomAt({ x: 0, y: 0 }, 999)
       })
 
       expect(result.current.camera.zoom).toBe(4)
@@ -223,7 +222,7 @@ describe('useCamera', () => {
       const { result } = renderHook(() => useCamera({ minZoom: 0.5 }))
 
       act(() => {
-        result.current.zoomAt(0, 0, 0.01)
+        result.current.zoomAt({ x: 0, y: 0 }, 0.01)
       })
 
       expect(result.current.camera.zoom).toBe(0.5)

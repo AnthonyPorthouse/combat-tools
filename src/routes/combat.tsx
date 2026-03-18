@@ -1,13 +1,8 @@
-import { Application, extend } from '@pixi/react'
-import { Container, Graphics } from 'pixi.js'
 import { createFileRoute } from '@tanstack/react-router'
-import { LayoutContainer } from '@pixi/layout/components'
 import { useCallback, useRef, useState } from 'react'
+import { Board } from '../components/Board'
 import { CursorTracker } from '../components/CursorTracker'
 import { DebuggerOverlay } from '../components/DebuggerOverlay'
-import { GridOverlay } from '../components/GridOverlay'
-import { LayoutResizer } from '../components/LayoutResizer'
-import { CameraController } from '../components/CameraController'
 import { TokenDisplay } from '../components/Token'
 import { useCamera } from '../hooks/useCamera'
 import { useDebuggerOverlay } from '../hooks/useDebuggerOverlay'
@@ -17,12 +12,6 @@ import type { Vector2 } from '../lib/vector2'
 
 export const Route = createFileRoute('/combat')({
   component: RouteComponent,
-})
-
-extend({
-  Container,
-  Graphics,
-  LayoutContainer
 })
 
 /** Grid cell size in world-space units — must match the value passed to GridOverlay. */
@@ -71,24 +60,20 @@ function RouteComponent() {
 
   return (
     <div ref={combatContainerRef} style={{ position: 'relative' }}>
-      <Application resizeTo={window} antialias={true} eventMode='static'>
-          <LayoutResizer>
-              <CameraController camera={camera} panBy={panBy} zoomAt={zoomAt} />
-              <GridOverlay size={GRID_SIZE} zoom={camera.zoom} panX={camera.panX} panY={camera.panY} />
-              {[...tokenPlacements.values()].map(({ token, position }) => (
-                <TokenDisplay
-                  key={token.id}
-                  token={token}
-                  position={position}
-                  gridSize={GRID_SIZE}
-                  camera={camera}
-                  onMove={handleTokenMove}
-                  onHoverChange={handleTokenHover}
-                />
-              ))}
-              {showCursorTracker && <CursorTracker camera={camera} />}
-          </LayoutResizer>
-      </Application>
+      <Board camera={camera} panBy={panBy} zoomAt={zoomAt} gridSize={GRID_SIZE}>
+        {[...tokenPlacements.values()].map(({ token, position }) => (
+          <TokenDisplay
+            key={token.id}
+            token={token}
+            position={position}
+            gridSize={GRID_SIZE}
+            camera={camera}
+            onMove={handleTokenMove}
+            onHoverChange={handleTokenHover}
+          />
+        ))}
+        {showCursorTracker && <CursorTracker camera={camera} />}
+      </Board>
       <DebuggerOverlay gridCell={gridCell} hoveredToken={hoveredTokenName} />
     </div>
   )
