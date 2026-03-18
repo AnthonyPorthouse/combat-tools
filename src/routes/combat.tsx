@@ -42,7 +42,7 @@ function RouteComponent() {
     containerRef: combatContainerRef,
   })
 
-  const [showCursorTracker, setShowCursorTracker] = useState(false);
+  const [showCursorTracker] = useState(false);
 
   const [tokenPlacements, setTokenPlacements] = useState<Map<string, TokenPlacement>>(() => {
     const map = new Map<string, TokenPlacement>()
