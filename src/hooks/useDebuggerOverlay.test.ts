@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useDebuggerOverlay } from "./useDebuggerOverlay";
+import { useCamera } from "./useCamera";
+import { MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM } from "../utils/cameraMath";
 import type { RefObject } from "react";
 import type { CameraState } from "../utils/cameraMath";
+
+vi.mock("./useCamera");
 
 const identityCamera: CameraState = { zoom: 1, pan: { x: 0, y: 0 } };
 
@@ -26,22 +30,34 @@ function makeRef<T extends HTMLElement>(el: T): RefObject<T | null> {
   return { current: el };
 }
 
+function makeCameraReturn(camera: CameraState) {
+  return {
+    camera,
+    setPan: vi.fn(),
+    panBy: vi.fn(),
+    setZoom: vi.fn(),
+    zoomAt: vi.fn(),
+    minZoom: MIN_CAMERA_ZOOM,
+    maxZoom: MAX_CAMERA_ZOOM,
+  };
+}
+
 describe("useDebuggerOverlay", () => {
   let container: HTMLDivElement;
   const canvasRect = new DOMRect(100, 100, 400, 300); // left=100 top=100 right=500 bottom=400
 
   beforeEach(() => {
     container = makeContainerWithCanvas(canvasRect);
+    vi.mocked(useCamera).mockReturnValue(makeCameraReturn(identityCamera));
   });
 
   afterEach(() => {
     document.body.removeChild(container);
+    vi.clearAllMocks();
   });
 
   it("returns gridCell as null initially", () => {
-    const { result } = renderHook(() =>
-      useDebuggerOverlay({ camera: identityCamera, containerRef: makeRef(container) }),
-    );
+    const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
 
     expect(result.current.gridCell).toBeNull();
   });
@@ -51,7 +67,7 @@ describe("useDebuggerOverlay", () => {
     document.body.appendChild(emptyContainer);
 
     const { result } = renderHook(() =>
-      useDebuggerOverlay({ camera: identityCamera, containerRef: makeRef(emptyContainer) }),
+      useDebuggerOverlay({ containerRef: makeRef(emptyContainer) }),
     );
 
     act(() => {
@@ -65,7 +81,6 @@ describe("useDebuggerOverlay", () => {
   it("returns a GridCell when the pointer moves inside the canvas", () => {
     const { result } = renderHook(() =>
       useDebuggerOverlay({
-        camera: identityCamera,
         gridSize: 64,
         containerRef: makeRef(container),
       }),
@@ -80,9 +95,7 @@ describe("useDebuggerOverlay", () => {
   });
 
   it("returns null when the pointer moves outside the canvas horizontally", () => {
-    const { result } = renderHook(() =>
-      useDebuggerOverlay({ camera: identityCamera, containerRef: makeRef(container) }),
-    );
+    const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
 
     act(() => {
       firePointerMove(164, 164); // inside first
@@ -95,9 +108,7 @@ describe("useDebuggerOverlay", () => {
   });
 
   it("returns null when the pointer moves outside the canvas vertically", () => {
-    const { result } = renderHook(() =>
-      useDebuggerOverlay({ camera: identityCamera, containerRef: makeRef(container) }),
-    );
+    const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
 
     act(() => {
       firePointerMove(164, 164); // inside first
@@ -110,10 +121,8 @@ describe("useDebuggerOverlay", () => {
   });
 
   it("recalculates the grid cell when the camera changes", () => {
-    const { result, rerender } = renderHook(
-      ({ camera }: { camera: CameraState }) =>
-        useDebuggerOverlay({ camera, gridSize: 64, containerRef: makeRef(container) }),
-      { initialProps: { camera: identityCamera } },
+    const { result, rerender } = renderHook(() =>
+      useDebuggerOverlay({ gridSize: 64, containerRef: makeRef(container) }),
     );
 
     act(() => {
@@ -124,7 +133,8 @@ describe("useDebuggerOverlay", () => {
     expect(result.current.gridCell).toEqual({ col: 1, row: 1 });
 
     // With pan=64 the world point shifts: world.x = 64/1 + 64 = 128 → col=2
-    rerender({ camera: { zoom: 1, pan: { x: 64, y: 64 } } });
+    vi.mocked(useCamera).mockReturnValue(makeCameraReturn({ zoom: 1, pan: { x: 64, y: 64 } }));
+    rerender();
 
     expect(result.current.gridCell).toEqual({ col: 2, row: 2 });
   });
@@ -132,9 +142,7 @@ describe("useDebuggerOverlay", () => {
   it("removes the pointermove event listener on unmount", () => {
     const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
 
-    const { unmount } = renderHook(() =>
-      useDebuggerOverlay({ camera: identityCamera, containerRef: makeRef(container) }),
-    );
+    const { unmount } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
 
     unmount();
 
