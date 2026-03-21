@@ -35,10 +35,10 @@ export const GridOverlay = ({ size = DEFAULT_GRID_SIZE }: GridOverlayProps) => {
     };
 
     handleResize();
-    app?.renderer.on("resize", handleResize);
+    app.renderer?.on("resize", handleResize);
 
     return () => {
-      app.renderer.off("resize", handleResize);
+      app.renderer?.off("resize", handleResize);
     };
   }, [app]);
 

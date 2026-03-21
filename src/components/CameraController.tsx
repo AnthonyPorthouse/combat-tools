@@ -51,16 +51,16 @@ export const CameraController = () => {
       };
     };
 
-    app.stage.on("pointerdown", handlePointerDown);
-    app.stage.on("globalpointermove", handlePointerMove);
-    app.stage.on("pointerup", stopDrag);
-    app.stage.on("pointerupoutside", stopDrag);
+    app.stage?.on("pointerdown", handlePointerDown);
+    app.stage?.on("globalpointermove", handlePointerMove);
+    app.stage?.on("pointerup", stopDrag);
+    app.stage?.on("pointerupoutside", stopDrag);
 
     return () => {
-      app.stage.off("pointerdown", handlePointerDown);
-      app.stage.off("globalpointermove", handlePointerMove);
-      app.stage.off("pointerup", stopDrag);
-      app.stage.off("pointerupoutside", stopDrag);
+      app.stage?.off("pointerdown", handlePointerDown);
+      app.stage?.off("globalpointermove", handlePointerMove);
+      app.stage?.off("pointerup", stopDrag);
+      app.stage?.off("pointerupoutside", stopDrag);
     };
   }, [app, camera.zoom, panBy]);
 
@@ -164,7 +164,7 @@ export const CameraController = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
-      app.ticker.remove(tick);
+      app.ticker?.remove(tick);
     };
   }, [app, camera.zoom, panBy]);
 

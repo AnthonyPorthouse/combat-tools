@@ -42,4 +42,14 @@ describe("createToken", () => {
     const uniqueIds = new Set(ids);
     expect(uniqueIds.size).toBe(1000);
   });
+
+  it("defaults locked to undefined when not provided", () => {
+    const token = createToken("Goblin");
+    expect(token.locked).toBeUndefined();
+  });
+
+  it("sets locked when provided", () => {
+    const token = createToken("Goblin", 1, undefined, true);
+    expect(token.locked).toBe(true);
+  });
 });

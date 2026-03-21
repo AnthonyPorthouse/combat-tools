@@ -27,6 +27,8 @@ export type Token = {
   size: TokenSize;
   /** Optional URL or data-URI for the token's portrait image. */
   image?: string;
+  /** When true, the token cannot be dragged to a new position. */
+  locked?: boolean;
 };
 
 /**
@@ -39,9 +41,15 @@ export type Token = {
  * @param size  - Grid-square size of the token (default 1).
  * @param image - Optional portrait image URL.
  */
-export const createToken = (name: string, size: TokenSize = 1, image?: string): Token => ({
+export const createToken = (
+  name: string,
+  size: TokenSize = 1,
+  image?: string,
+  locked?: boolean,
+): Token => ({
   id: nanoid(),
   name,
   size,
   image,
+  locked,
 });
