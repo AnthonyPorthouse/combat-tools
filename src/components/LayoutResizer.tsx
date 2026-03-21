@@ -33,7 +33,7 @@ export const LayoutResizer = ({ children }: PropsWithChildren) => {
     app.renderer.on("resize", applyLayout);
 
     return () => {
-      app.renderer.off("resize", applyLayout);
+      app.renderer?.off("resize", applyLayout);
     };
   }, [app]);
 
