@@ -11,7 +11,7 @@
 - TypeScript strict mode
 - Single quotes, no semicolons
 - Use functional patterns where possible
-- JSDoc docblocks must be used, describe what and why. A* quality only
+- JSDoc docblocks must be used, describe what and why. A\* quality only
 - Prefer single exports per file, except for barrel files.
 
 ## Functionality considerations
