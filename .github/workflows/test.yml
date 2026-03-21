@@ -18,8 +18,8 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
-          cache: 'npm'
+          node-version: "lts/*"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -27,13 +27,5 @@ jobs:
       - name: Run tests with coverage
         run: npm run coverage
 
-      - name: Download coverage baseline
-        uses: actions/download-artifact@v8
-        with:
-          name: coverage-baseline
-          path: coverage/coverage-summary.json
-
       - name: Report coverage to PR
         uses: davelosert/vitest-coverage-report-action@v2
-        with:
-          json-summary-compare-path: coverage-baseline/coverage-summary.json
