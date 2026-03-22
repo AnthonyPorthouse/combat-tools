@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "coverage": "vitest run --coverage",
+    "coverage": "vitest run --project unit --coverage",
+    "test:storybook": "vitest run --project storybook",
     "prepare": "husky",
     "storybook": "storybook dev --port 6006",
     "build-storybook": "storybook build"
