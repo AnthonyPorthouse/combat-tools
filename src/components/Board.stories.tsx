@@ -1,10 +1,5 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
-import { useCallback, useState } from "react";
-import type { Vector2 } from "../lib/vector2";
-import { createToken } from "../types/token";
-import type { Token } from "../types/token";
 import { Board } from "./Board";
-import { TokenDisplay } from "./Token";
 
 /** Wraps Board stories in a full-viewport container so Pixi's resizeTo=window
  * has a measurable height to fill. */
@@ -23,91 +18,148 @@ const meta: Meta<typeof Board> = {
   parameters: {
     layout: "fullscreen",
   },
-};
-
-export default meta;
-type Story = StoryObj<typeof Board>;
-
-/** Renders the Board with no tokens — just the grid background. */
-export const EmptyBoard: Story = {
   args: {
     gridSize: GRID_SIZE,
   },
 };
 
-type Placement = { token: Token; position: Vector2 };
+export default meta;
+type Story = StoryObj<typeof Board>;
 
-/** A stateful wrapper that handles token movement callbacks for Board stories. */
-function BoardWithTokens({
-  gridSize,
-  initialPlacements,
-}: {
-  gridSize: number;
-  initialPlacements: Placement[];
-}) {
-  const [placements, setPlacements] = useState(initialPlacements);
-
-  const handleMove = useCallback((id: string, newPosition: Vector2) => {
-    setPlacements((prev) =>
-      prev.map((p) => (p.token.id === id ? { ...p, position: newPosition } : p)),
-    );
-  }, []);
-
-  return (
-    <Board gridSize={gridSize}>
-      {placements.map(({ token, position }) => (
-        <TokenDisplay
-          key={token.id}
-          token={token}
-          position={position}
-          gridSize={gridSize}
-          onMove={handleMove}
-        />
-      ))}
-    </Board>
+/** Fires a wheel event on the canvas to adjust zoom.
+ * `WHEEL_ZOOM_SENSITIVITY = 0.0015` so `zoomFactor = exp(-deltaY * 0.0015)`. */
+function fireWheel(canvas: HTMLCanvasElement, deltaY: number) {
+  const { left, top, width, height } = canvas.getBoundingClientRect();
+  canvas.dispatchEvent(
+    new WheelEvent("wheel", {
+      deltaY,
+      clientX: left + width / 2,
+      clientY: top + height / 2,
+      bubbles: true,
+      cancelable: true,
+    }),
   );
 }
 
-/** A single standard (1×1) token — the baseline token story. */
-export const SingleToken: Story = {
-  render: () => (
-    <BoardWithTokens
-      gridSize={GRID_SIZE}
-      initialPlacements={[{ token: createToken("Goblin", 1), position: { x: 2, y: 2 } }]}
-    />
-  ),
+/** Fires a right-click drag sequence on the canvas to pan the view.
+ * The camera pans by `(-delta / zoom)` world units, so moving the pointer
+ * left/up shifts the visible area right/down. */
+function firePan(
+  canvas: HTMLCanvasElement,
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number,
+) {
+  canvas.dispatchEvent(
+    new PointerEvent("pointerdown", {
+      button: 2,
+      clientX: fromX,
+      clientY: fromY,
+      bubbles: true,
+      isPrimary: true,
+      pointerId: 1,
+    }),
+  );
+  canvas.dispatchEvent(
+    new PointerEvent("pointermove", {
+      clientX: toX,
+      clientY: toY,
+      bubbles: true,
+      isPrimary: true,
+      pointerId: 1,
+    }),
+  );
+  canvas.dispatchEvent(
+    new PointerEvent("pointerup", {
+      clientX: toX,
+      clientY: toY,
+      bubbles: true,
+      isPrimary: true,
+      pointerId: 1,
+    }),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Stories
+// ---------------------------------------------------------------------------
+
+/**
+ * The Board at its default state — zoom 1×, centred on the grid origin.
+ *
+ * **Camera controls:**
+ * - **Scroll wheel** — zoom in / out (range: 0.1× – 8×)
+ * - **Right-click drag** — pan across the infinite grid
+ * - **W / A / S / D** or **Arrow keys** — pan at 700 world-units per second
+ */
+export const EmptyBoard: Story = {};
+
+/**
+ * The Board zoomed in to ~3× magnification.
+ *
+ * Five scroll-up events are fired during setup. At this zoom level grid lines
+ * are spaced further apart on screen, making individual cells easier to work
+ * with.
+ */
+export const ZoomedIn: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = canvasElement.querySelector("canvas");
+    if (!canvas) throw new Error("PixiJS canvas not found");
+
+    // Wait for PixiJS to initialise its WebGL context and event system.
+    await new Promise<void>((r) => setTimeout(r, 500));
+
+    // Each event: zoomFactor = exp(-(-150) * 0.0015) ≈ 1.252
+    // After 5 events: 1.252^5 ≈ 3.05×
+    for (let i = 0; i < 5; i++) {
+      fireWheel(canvas, -150);
+    }
+  },
 };
 
-/** One token of each size (0.5, 1, 2, 3, 4) placed side by side. */
-export const AllTokenSizes: Story = {
-  render: () => (
-    <BoardWithTokens
-      gridSize={GRID_SIZE}
-      initialPlacements={[
-        { token: createToken("Tiny", 0.5), position: { x: 1, y: 2 } },
-        { token: createToken("Small", 1), position: { x: 3, y: 2 } },
-        { token: createToken("Medium", 2), position: { x: 5, y: 2 } },
-        { token: createToken("Large", 3), position: { x: 8, y: 2 } },
-        { token: createToken("Huge", 4), position: { x: 12, y: 2 } },
-      ]}
-    />
-  ),
+/**
+ * The Board zoomed out to ~0.33× magnification.
+ *
+ * Five scroll-down events are fired during setup. At this zoom level many grid
+ * cells are visible simultaneously, useful for navigating large battle maps.
+ */
+export const ZoomedOut: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = canvasElement.querySelector("canvas");
+    if (!canvas) throw new Error("PixiJS canvas not found");
+
+    await new Promise<void>((r) => setTimeout(r, 500));
+
+    // Each event: zoomFactor = exp(-(150) * 0.0015) ≈ 0.799
+    // After 5 events: 0.799^5 ≈ 0.33×
+    for (let i = 0; i < 5; i++) {
+      fireWheel(canvas, 150);
+    }
+  },
 };
 
-/** Multiple players vs. enemies with a large creature — a crowded encounter. */
-export const GroupEncounter: Story = {
-  render: () => (
-    <BoardWithTokens
-      gridSize={GRID_SIZE}
-      initialPlacements={[
-        { token: createToken("Player 1", 1), position: { x: 2, y: 3 } },
-        { token: createToken("Player 2", 1), position: { x: 3, y: 3 } },
-        { token: createToken("Player 3", 1), position: { x: 2, y: 4 } },
-        { token: createToken("Goblin A", 1, "/tokens/goblin.png", true), position: { x: 6, y: 3 } },
-        { token: createToken("Goblin B", 1, "/tokens/goblin.png", true), position: { x: 7, y: 3 } },
-        { token: createToken("Goblin C", 1, "/tokens/goblin.png", true), position: { x: 6, y: 4 } },
-        { token: createToken("Dragon", 4, undefined, true), position: { x: 5, y: 6 } },
-      ]}
-    />
-  ),
+/**
+ * The Board panned ~10 cells right and ~5 cells down from the origin.
+ *
+ * A right-click drag is simulated during setup. The camera translates pointer
+ * delta into world-space movement, so the infinite grid scrolls in all
+ * directions without bounds.
+ */
+export const Panned: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = canvasElement.querySelector("canvas");
+    if (!canvas) throw new Error("PixiJS canvas not found");
+
+    await new Promise<void>((r) => setTimeout(r, 500));
+
+    const { left, top, width, height } = canvas.getBoundingClientRect();
+    const cx = left + width / 2;
+    const cy = top + height / 2;
+
+    // Moving pointer 640px left / 320px up at zoom=1 pans the world
+    // 640 / 1 = 640 world units right and 320 world units down
+    // (10 × GRID_SIZE = 640, 5 × GRID_SIZE = 320)
+    firePan(canvas, cx, cy, cx - 640, cy - 320);
+  },
 };

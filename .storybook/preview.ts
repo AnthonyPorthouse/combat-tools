@@ -18,6 +18,7 @@ const preview: Preview = {
     },
     layout: "fullscreen",
   },
+  tags: ["autodocs"],
 };
 
 export default preview;
