@@ -43,8 +43,8 @@ export const worldToGridCell = (world: Vector2, gridSize: number): GridCell => {
   const safeGridSize = Number.isFinite(gridSize) && gridSize > 0 ? gridSize : 32;
 
   return {
-    col: Math.round(world.x / safeGridSize),
-    row: Math.round(world.y / safeGridSize),
+    col: Math.round(world.x / safeGridSize) || 0,
+    row: Math.round(world.y / safeGridSize) || 0,
   };
 };
 

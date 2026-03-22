@@ -108,16 +108,40 @@ describe("worldToGridCell", () => {
     expect(worldToGridCell({ x: 0, y: 0 }, 64)).toEqual({ col: 0, row: 0 });
   });
 
-  it("floors fractional world coords to the correct cell", () => {
-    expect(worldToGridCell({ x: 63.9, y: 63.9 }, 64)).toEqual({ col: 0, row: 0 });
+  it("rounds fractional world coords to the nearest cell", () => {
+    // 63.9 / 64 ≈ 0.998 — rounds up to cell 1
+    expect(worldToGridCell({ x: 63.9, y: 63.9 }, 64)).toEqual({ col: 1, row: 1 });
+    // Exactly on a cell boundary
     expect(worldToGridCell({ x: 64, y: 64 }, 64)).toEqual({ col: 1, row: 1 });
+    // 128.5 / 64 ≈ 2.008, 192.7 / 64 ≈ 3.011 — both round to nearest
     expect(worldToGridCell({ x: 128.5, y: 192.7 }, 64)).toEqual({ col: 2, row: 3 });
   });
 
-  it("handles negative world coordinates (floor towards -Infinity)", () => {
-    expect(worldToGridCell({ x: -1, y: -1 }, 64)).toEqual({ col: -1, row: -1 });
+  it("snaps to the closer cell at the midpoint boundary (positive)", () => {
+    // 31.9 / 64 ≈ 0.498 — just below midpoint, stays in cell 0
+    expect(worldToGridCell({ x: 31.9, y: 31.9 }, 64)).toEqual({ col: 0, row: 0 });
+    // 32 / 64 = 0.5 exactly — Math.round rounds towards +Infinity, so cell 1
+    expect(worldToGridCell({ x: 32, y: 32 }, 64)).toEqual({ col: 1, row: 1 });
+    // 32.1 / 64 ≈ 0.502 — just past midpoint, rounds to cell 1
+    expect(worldToGridCell({ x: 32.1, y: 32.1 }, 64)).toEqual({ col: 1, row: 1 });
+  });
+
+  it("handles negative world coordinates (rounds to nearest cell)", () => {
+    // -1 / 64 ≈ -0.016 — close to 0, rounds to cell 0
+    expect(worldToGridCell({ x: -1, y: -1 }, 64)).toEqual({ col: 0, row: 0 });
+    // Exactly on a negative cell boundary
     expect(worldToGridCell({ x: -64, y: -64 }, 64)).toEqual({ col: -1, row: -1 });
-    expect(worldToGridCell({ x: -65, y: -65 }, 64)).toEqual({ col: -2, row: -2 });
+    // -65 / 64 ≈ -1.016 — just past -1, rounds to cell -1
+    expect(worldToGridCell({ x: -65, y: -65 }, 64)).toEqual({ col: -1, row: -1 });
+  });
+
+  it("snaps to the closer cell at the midpoint boundary (negative)", () => {
+    // -31.9 / 64 ≈ -0.498 — just below midpoint magnitude, rounds to cell 0
+    expect(worldToGridCell({ x: -31.9, y: -31.9 }, 64)).toEqual({ col: 0, row: 0 });
+    // -32 / 64 = -0.5 exactly — Math.round rounds towards +Infinity, so cell 0 (not -1)
+    expect(worldToGridCell({ x: -32, y: -32 }, 64)).toEqual({ col: 0, row: 0 });
+    // -32.1 / 64 ≈ -0.502 — just past negative midpoint, rounds to cell -1
+    expect(worldToGridCell({ x: -32.1, y: -32.1 }, 64)).toEqual({ col: -1, row: -1 });
   });
 
   it("falls back to gridSize 32 when gridSize is zero", () => {
