@@ -6,7 +6,7 @@ import {
   zoomAtScreenPoint,
   type CameraState,
 } from "../utils/cameraMath";
-import type { Vector2 } from "../lib/vector2";
+import { addVector2, type Vector2 } from "../lib/vector2";
 
 export type UseCameraOptions = {
   initialZoom?: number;
@@ -36,7 +36,7 @@ export const useCamera = ({
   const panBy = useCallback((delta: Vector2) => {
     setCamera((current) => ({
       ...current,
-      pan: { x: current.pan.x + delta.x, y: current.pan.y + delta.y },
+      pan: addVector2(current.pan, delta),
     }));
   }, []);
 

@@ -13,7 +13,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { screenToWorld, worldToGridCell, worldToScreen } from "../utils/cameraMath";
 import type { Token } from "../types/token";
-import type { Vector2 } from "../lib/vector2";
+import { subtractVector2, type Vector2 } from "../lib/vector2";
 import { useCamera } from "../hooks/useCamera";
 
 extend({ Container, Graphics, Sprite, Text });
@@ -151,7 +151,8 @@ export const TokenDisplay = ({
 
     const world = screenToWorld(dragScreenPos, camera);
     const size = token.size;
-    const snapWorld = { x: world.x - (gridSize * size) / 2, y: world.y - (gridSize * size) / 2 };
+    const offset = (gridSize * size) / 2;
+    const snapWorld = subtractVector2(world, { x: offset, y: offset });
     const cell = worldToGridCell(snapWorld, gridSize);
 
     const cellWorldX =
@@ -228,7 +229,8 @@ export const TokenDisplay = ({
             const world = screenToWorld(screenPos, cameraRef.current);
             const size = tokenSizeRef.current;
             const gs = gridSizeRef.current;
-            const snapWorld = { x: world.x - (gs * size) / 2, y: world.y - (gs * size) / 2 };
+            const offset = (gs * size) / 2;
+            const snapWorld = subtractVector2(world, { x: offset, y: offset });
             const cell = worldToGridCell(snapWorld, gs);
             return { x: cell.col, y: cell.row };
           })()
