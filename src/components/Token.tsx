@@ -1,20 +1,12 @@
 import { extend, useApplication } from "@pixi/react";
-import {
-  Assets,
-  Circle,
-  Container,
-  Graphics,
-  Matrix,
-  Sprite,
-  Text,
-  TextStyle,
-  Texture,
-} from "pixi.js";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { screenToWorld, worldToGridCell, worldToScreen } from "../utils/cameraMath";
+import { Circle, Container, Graphics, Sprite, Text, TextStyle } from "pixi.js";
+import { useCallback, useMemo } from "react";
+import { worldToScreen } from "../utils/cameraMath";
 import type { Token } from "../types/token";
-import { subtractVector2, type Vector2 } from "../lib/vector2";
+import type { Vector2 } from "../lib/vector2";
 import { useCamera } from "../hooks/useCamera";
+import { useTokenTexture } from "../hooks/useTokenTexture";
+import { useTokenDrag } from "../hooks/useTokenDrag";
 
 extend({ Container, Graphics, Sprite, Text });
 
@@ -52,11 +44,11 @@ type TokenDisplayProps = {
  * cover-filled texture. Otherwise the token's name is displayed in black
  * text on a white circle.
  *
- * During drag a 50% transparent ghost clone follows the cursor exactly,
- * and a snapped blue rectangle shows the grid-aligned cell(s) where the
- * token will land. The drop position is based on the ghost's top-left
- * corner, not the raw cursor, so the token always lands where the highlight
- * indicates. The original token stays at its committed position until drop.
+ * During drag a 50% transparent ghost clone follows the cursor while
+ * preserving the offset from where the drag started within the token.
+ * A snapped blue rectangle shows the grid-aligned cell(s) where the token
+ * will land, based on the ghost's top-left corner. The original token stays
+ * at its committed position until drop.
  */
 export const TokenDisplay = ({
   token,
@@ -67,62 +59,8 @@ export const TokenDisplay = ({
 }: TokenDisplayProps) => {
   const { app } = useApplication();
   const { camera } = useCamera();
-  const [texture, setTexture] = useState<Texture | null>(null);
-  const isDraggingRef = useRef(false);
-  const [dragScreenPos, setDragScreenPos] = useState<{ x: number; y: number } | null>(null);
-  const dragScreenPosRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Keep stable refs so stage handlers always use the latest values without
-  // needing to be re-registered when props change.
-  const cameraRef = useRef(camera);
-  const gridSizeRef = useRef(gridSize);
-  const positionRef = useRef(position);
-  const onMoveRef = useRef(onMove);
-  const tokenIdRef = useRef(token.id);
-  const tokenSizeRef = useRef(token.size);
-
-  useEffect(() => {
-    cameraRef.current = camera;
-  }, [camera]);
-  useEffect(() => {
-    gridSizeRef.current = gridSize;
-  }, [gridSize]);
-  useEffect(() => {
-    positionRef.current = position;
-  }, [position]);
-  useEffect(() => {
-    onMoveRef.current = onMove;
-  }, [onMove]);
-  useEffect(() => {
-    tokenIdRef.current = token.id;
-  }, [token.id]);
-  useEffect(() => {
-    tokenSizeRef.current = token.size;
-  }, [token.size]);
-
-  // Load the portrait image asynchronously; fall back to the name display on failure.
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      if (!token.image) {
-        setTexture(null);
-        return;
-      }
-      try {
-        const loaded = await Assets.load<Texture>(token.image);
-        if (!cancelled) setTexture(loaded);
-      } catch {
-        if (!cancelled) setTexture(null);
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [token.image]);
+  const { texture } = useTokenTexture({ imageUrl: token.image });
 
   const tokenWorldSize = gridSize * token.size;
 
@@ -141,28 +79,21 @@ export const TokenDisplay = ({
   const screenRadius = screenSize / 2;
   const fontSize = Math.max(8, Math.round(screenSize * TOKEN_FONT_SCALE));
 
+  const { ghostScreenPos, dropZoneScreenPos, handlePointerDown } = useTokenDrag({
+    app,
+    token,
+    position,
+    gridSize,
+    camera,
+    onMove,
+    tokenWorldSize,
+    tokenScreenPos: { x: screenX, y: screenY },
+  });
+
   const hitArea = useMemo(
     () => new Circle(screenRadius, screenRadius, screenRadius),
     [screenRadius],
   );
-
-  const dropZoneScreenPos = useMemo(() => {
-    if (!dragScreenPos) return null;
-
-    const world = screenToWorld(dragScreenPos, camera);
-    const size = token.size;
-    const offset = (gridSize * size) / 2;
-    const snapWorld = subtractVector2(world, { x: offset, y: offset });
-    const cell = worldToGridCell(snapWorld, gridSize);
-
-    const cellWorldX =
-      size === 0.5 ? cell.col * gridSize + (gridSize - tokenWorldSize) / 2 : cell.col * gridSize;
-
-    const cellWorldY =
-      size === 0.5 ? cell.row * gridSize + (gridSize - tokenWorldSize) / 2 : cell.row * gridSize;
-
-    return worldToScreen({ x: cellWorldX, y: cellWorldY }, camera);
-  }, [dragScreenPos, camera, token.size, gridSize, tokenWorldSize]);
 
   const drawDropZone = useCallback(
     (g: Graphics) => {
@@ -180,11 +111,7 @@ export const TokenDisplay = ({
     (g: Graphics) => {
       g.clear();
       if (texture) {
-        const s = Math.max(screenSize / texture.width, screenSize / texture.height);
-        const offsetX = (screenSize - texture.width * s) / 2;
-        const offsetY = (screenSize - texture.height * s) / 2;
-        const matrix = new Matrix(1 / s, 0, 0, 1 / s, -offsetX / s, -offsetY / s);
-        g.setFillStyle({ texture, matrix });
+        g.setFillStyle({ texture });
       } else {
         g.setFillStyle({ color: 0xffffff });
       }
@@ -206,63 +133,6 @@ export const TokenDisplay = ({
         align: "center",
       }),
     [fontSize, screenSize],
-  );
-
-  // Register stage-level pointer handlers once on mount. Handlers check
-  // isDraggingRef so they're no-ops when this token isn't being dragged,
-  // avoiding any race condition with React state updates.
-  useEffect(() => {
-    if (!app) return;
-
-    const onGlobalPointerMove = (e: { global: { x: number; y: number } }) => {
-      if (!isDraggingRef.current) return;
-      const pos = { x: e.global.x, y: e.global.y };
-      dragScreenPosRef.current = pos;
-      setDragScreenPos(pos);
-    };
-
-    const onPointerUp = () => {
-      if (!isDraggingRef.current) return;
-      const screenPos = dragScreenPosRef.current;
-      const finalPos: Vector2 = screenPos
-        ? (() => {
-            const world = screenToWorld(screenPos, cameraRef.current);
-            const size = tokenSizeRef.current;
-            const gs = gridSizeRef.current;
-            const offset = (gs * size) / 2;
-            const snapWorld = subtractVector2(world, { x: offset, y: offset });
-            const cell = worldToGridCell(snapWorld, gs);
-            return { x: cell.col, y: cell.row };
-          })()
-        : positionRef.current;
-
-      onMoveRef.current(tokenIdRef.current, finalPos);
-      isDraggingRef.current = false;
-      dragScreenPosRef.current = null;
-      setDragScreenPos(null);
-    };
-
-    app.stage.on("globalpointermove", onGlobalPointerMove);
-    app.stage.on("pointerup", onPointerUp);
-    app.stage.on("pointerupoutside", onPointerUp);
-
-    return () => {
-      app.stage?.off("globalpointermove", onGlobalPointerMove);
-      app.stage?.off("pointerup", onPointerUp);
-      app.stage?.off("pointerupoutside", onPointerUp);
-    };
-  }, [app]);
-
-  const handlePointerDown = useCallback(
-    (e: { button: number; stopPropagation: () => void; global: { x: number; y: number } }) => {
-      if (e.button !== 0) return;
-      if (token.locked) return;
-      e.stopPropagation();
-      isDraggingRef.current = true;
-      dragScreenPosRef.current = { x: e.global.x, y: e.global.y };
-      setDragScreenPos({ x: e.global.x, y: e.global.y });
-    },
-    [token.locked],
   );
 
   const nameLabel = !texture ? (
@@ -287,20 +157,15 @@ export const TokenDisplay = ({
       </pixiContainer>
 
       {/* Ghost and snapped drop zone highlight */}
-      {dragScreenPos && (
+      {ghostScreenPos && (
         <>
           {dropZoneScreenPos && (
             <pixiContainer x={dropZoneScreenPos.x} y={dropZoneScreenPos.y} eventMode="none">
               <pixiGraphics draw={drawDropZone} />
             </pixiContainer>
           )}
-          {/* Ghost — follows cursor exactly, 50% alpha, no events */}
-          <pixiContainer
-            x={dragScreenPos.x - screenRadius}
-            y={dragScreenPos.y - screenRadius}
-            alpha={0.5}
-            eventMode="none"
-          >
+          {/* Ghost — follows cursor with preserved drag offset, 50% alpha, no events */}
+          <pixiContainer x={ghostScreenPos.x} y={ghostScreenPos.y} alpha={0.5} eventMode="none">
             <pixiGraphics draw={drawCircle} />
             {nameLabel}
           </pixiContainer>

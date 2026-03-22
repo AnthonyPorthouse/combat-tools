@@ -2,7 +2,7 @@ import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn } from "storybook/test";
 import { useCallback, useState } from "react";
 import type { Vector2 } from "../lib/vector2";
-import { createToken } from "../types/token";
+import { createToken, type TokenSize } from "../types/token";
 import { Board } from "./Board";
 import { TokenDisplay } from "./Token";
 
@@ -154,6 +154,32 @@ export const LargeToken: Story = {
     <Board gridSize={GRID_SIZE}>
       <TokenDisplay
         token={createToken("Dragon", 4)}
+        position={INITIAL_POSITION}
+        gridSize={GRID_SIZE}
+        onMove={onMove}
+        onHoverChange={onHoverChange}
+      />
+    </Board>
+  ),
+};
+
+/** A token with a portrait image — verifies texture scaling fills the circle. */
+export const WithImage: StoryObj<StoryArgs & { size?: TokenSize }> = {
+  argTypes: {
+    size: {
+      options: [0.5, 1, 2, 3, 4],
+      control: { type: "select" },
+    },
+  },
+
+  args: {
+    size: 1,
+  },
+
+  render: ({ onMove, onHoverChange, size = 1 }) => (
+    <Board gridSize={GRID_SIZE}>
+      <TokenDisplay
+        token={createToken("Goblin", size, "/tokens/goblin.png")}
         position={INITIAL_POSITION}
         gridSize={GRID_SIZE}
         onMove={onMove}

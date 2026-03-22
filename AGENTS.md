@@ -17,6 +17,7 @@
 ## Functionality considerations
 
 - Prefer existing well used and actively maintained packages over rolling our own behaviour
+- Follow SOLID principles
 
 ## Review Tasks
 
