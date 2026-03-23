@@ -120,7 +120,7 @@ export const TokenDisplay = ({
       g.fill();
       g.stroke();
     },
-    [texture, screenSize, screenRadius],
+    [texture, screenRadius],
   );
 
   const textStyle = useMemo(

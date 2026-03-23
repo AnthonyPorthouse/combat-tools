@@ -1,5 +1,9 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
+import { expect, waitFor } from "storybook/test";
+import { useEffect } from "react";
 import { Board } from "./Board";
+import { useCamera } from "../hooks/useCamera";
+import type { CameraState } from "../utils/cameraMath";
 
 /** Wraps Board stories in a full-viewport container so Pixi's resizeTo=window
  * has a measurable height to fill. */
@@ -10,6 +14,22 @@ const fullViewportDecorator: Decorator = (Story) => (
 );
 
 const GRID_SIZE = 64;
+
+/**
+ * Mirrors live camera state into a plain object readable by Storybook play
+ * functions (which run outside the Pixi tree). Must be rendered as a child of
+ * Board so it sits inside CameraProvider.
+ */
+const cameraSnapshot: CameraState = { zoom: 1, pan: { x: 0, y: 0 } };
+
+function CameraStateCapture() {
+  const { camera } = useCamera();
+  useEffect(() => {
+    cameraSnapshot.zoom = camera.zoom;
+    cameraSnapshot.pan = { ...camera.pan };
+  }, [camera]);
+  return null;
+}
 
 const meta: Meta<typeof Board> = {
   title: "Combat/Board",
@@ -103,6 +123,11 @@ export const EmptyBoard: Story = {};
  * with.
  */
 export const ZoomedIn: Story = {
+  render: (args) => (
+    <Board {...args}>
+      <CameraStateCapture />
+    </Board>
+  ),
   play: async ({ canvasElement }) => {
     const canvas = canvasElement.querySelector("canvas");
     if (!canvas) throw new Error("PixiJS canvas not found");
@@ -111,10 +136,15 @@ export const ZoomedIn: Story = {
     await new Promise<void>((r) => setTimeout(r, 500));
 
     // Each event: zoomFactor = exp(-(-150) * 0.0015) ≈ 1.252
-    // After 5 events: 1.252^5 ≈ 3.05×
+    // After 5 events: exp(1.125) ≈ 3.08×
+    // Await between events so React can re-render and the wheel handler picks
+    // up the updated camera.zoom before the next event fires.
     for (let i = 0; i < 5; i++) {
       fireWheel(canvas, -150);
+      await new Promise<void>((r) => setTimeout(r, 50));
     }
+
+    await waitFor(() => expect(cameraSnapshot.zoom).toBeCloseTo(3.08, 1));
   },
 };
 
@@ -125,6 +155,11 @@ export const ZoomedIn: Story = {
  * cells are visible simultaneously, useful for navigating large battle maps.
  */
 export const ZoomedOut: Story = {
+  render: (args) => (
+    <Board {...args}>
+      <CameraStateCapture />
+    </Board>
+  ),
   play: async ({ canvasElement }) => {
     const canvas = canvasElement.querySelector("canvas");
     if (!canvas) throw new Error("PixiJS canvas not found");
@@ -132,10 +167,15 @@ export const ZoomedOut: Story = {
     await new Promise<void>((r) => setTimeout(r, 500));
 
     // Each event: zoomFactor = exp(-(150) * 0.0015) ≈ 0.799
-    // After 5 events: 0.799^5 ≈ 0.33×
+    // After 5 events: exp(-1.125) ≈ 0.32×
+    // Await between events so React can re-render and the wheel handler picks
+    // up the updated camera.zoom before the next event fires.
     for (let i = 0; i < 5; i++) {
       fireWheel(canvas, 150);
+      await new Promise<void>((r) => setTimeout(r, 50));
     }
+
+    await waitFor(() => expect(cameraSnapshot.zoom).toBeCloseTo(0.32, 1));
   },
 };
 
@@ -147,6 +187,11 @@ export const ZoomedOut: Story = {
  * directions without bounds.
  */
 export const Panned: Story = {
+  render: (args) => (
+    <Board {...args}>
+      <CameraStateCapture />
+    </Board>
+  ),
   play: async ({ canvasElement }) => {
     const canvas = canvasElement.querySelector("canvas");
     if (!canvas) throw new Error("PixiJS canvas not found");
@@ -161,5 +206,10 @@ export const Panned: Story = {
     // 640 / 1 = 640 world units right and 320 world units down
     // (10 × GRID_SIZE = 640, 5 × GRID_SIZE = 320)
     firePan(canvas, cx, cy, cx - 640, cy - 320);
+
+    await waitFor(() => {
+      expect(cameraSnapshot.pan.x).toBe(640);
+      expect(cameraSnapshot.pan.y).toBe(320);
+    });
   },
 };
