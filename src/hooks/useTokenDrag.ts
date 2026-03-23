@@ -5,6 +5,7 @@ import {
   worldToGridCell,
   worldToScreen,
   type CameraState,
+  type GridCell,
 } from "../utils/cameraMath";
 import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
@@ -20,11 +21,19 @@ export type UseTokenDragOptions = {
   tokenWorldSize: number;
   /** Current top-left position of the token in screen space. */
   tokenScreenPos: Vector2;
+  /**
+   * Optional resolver applied to the raw computed target cell before it is
+   * used for the drop zone indicator and passed to `onMove`. Use this to
+   * redirect blocked cells to the nearest valid one.
+   */
+  resolveTargetCell?: (raw: GridCell) => GridCell;
 };
 
 export type UseTokenDragResult = {
   ghostScreenPos: Vector2 | null;
   dropZoneScreenPos: Vector2 | null;
+  /** The snapped grid cell the ghost is currently hovering over, or null when not dragging. */
+  targetCell: GridCell | null;
   handlePointerDown: (e: {
     button: number;
     stopPropagation: () => void;
@@ -41,6 +50,7 @@ export const useTokenDrag = ({
   onMove,
   tokenWorldSize,
   tokenScreenPos,
+  resolveTargetCell,
 }: UseTokenDragOptions): UseTokenDragResult => {
   const [ghostScreenPos, setGhostScreenPos] = useState<Vector2 | null>(null);
   const isDraggingRef = useRef(false);
@@ -56,6 +66,7 @@ export const useTokenDrag = ({
   const tokenIdRef = useRef(token.id);
   const lockedRef = useRef(token.locked);
   const tokenScreenPosRef = useRef(tokenScreenPos);
+  const resolveTargetCellRef = useRef(resolveTargetCell);
 
   useEffect(() => {
     cameraRef.current = camera;
@@ -78,6 +89,9 @@ export const useTokenDrag = ({
   useEffect(() => {
     tokenScreenPosRef.current = tokenScreenPos;
   }, [tokenScreenPos]);
+  useEffect(() => {
+    resolveTargetCellRef.current = resolveTargetCell;
+  }, [resolveTargetCell]);
 
   useEffect(() => {
     if (!app) return;
@@ -97,7 +111,8 @@ export const useTokenDrag = ({
       const finalPos: Vector2 = ghostPos
         ? (() => {
             const world = screenToWorld(ghostPos, cameraRef.current);
-            const cell = worldToGridCell(world, gridSizeRef.current);
+            const raw = worldToGridCell(world, gridSizeRef.current);
+            const cell = resolveTargetCellRef.current ? resolveTargetCellRef.current(raw) : raw;
             return { x: cell.col, y: cell.row };
           })()
         : positionRef.current;
@@ -139,21 +154,29 @@ export const useTokenDrag = ({
     [],
   );
 
-  const dropZoneScreenPos = useMemo(() => {
+  const targetCell = useMemo<GridCell | null>(() => {
     if (!ghostScreenPos) return null;
+    const raw = worldToGridCell(screenToWorld(ghostScreenPos, camera), gridSize);
+    return resolveTargetCellRef.current ? resolveTargetCellRef.current(raw) : raw;
+  }, [ghostScreenPos, camera, gridSize]);
 
-    const world = screenToWorld(ghostScreenPos, camera);
-    const cell = worldToGridCell(world, gridSize);
+  const dropZoneScreenPos = useMemo(() => {
+    if (!targetCell) return null;
+
     const size = token.size;
 
     const cellWorldX =
-      size === 0.5 ? cell.col * gridSize + (gridSize - tokenWorldSize) / 2 : cell.col * gridSize;
+      size === 0.5
+        ? targetCell.col * gridSize + (gridSize - tokenWorldSize) / 2
+        : targetCell.col * gridSize;
 
     const cellWorldY =
-      size === 0.5 ? cell.row * gridSize + (gridSize - tokenWorldSize) / 2 : cell.row * gridSize;
+      size === 0.5
+        ? targetCell.row * gridSize + (gridSize - tokenWorldSize) / 2
+        : targetCell.row * gridSize;
 
     return worldToScreen({ x: cellWorldX, y: cellWorldY }, camera);
-  }, [ghostScreenPos, camera, token.size, gridSize, tokenWorldSize]);
+  }, [targetCell, camera, token.size, gridSize, tokenWorldSize]);
 
-  return { ghostScreenPos, dropZoneScreenPos, handlePointerDown };
+  return { ghostScreenPos, dropZoneScreenPos, targetCell, handlePointerDown };
 };
