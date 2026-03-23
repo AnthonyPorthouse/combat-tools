@@ -5,8 +5,6 @@ import type { ReactNode } from "react";
 import { CameraController } from "./CameraController";
 import { GridOverlay } from "./GridOverlay";
 import { LayoutResizer } from "./LayoutResizer";
-import { CameraProvider } from "../contexts/CameraProvider";
-
 extend({ Container, Graphics, LayoutContainer });
 
 type BoardProps = {
@@ -16,14 +14,12 @@ type BoardProps = {
 
 export function Board({ gridSize = 64, children }: BoardProps) {
   return (
-    <CameraProvider>
-      <Application resizeTo={window} antialias={true} eventMode="static">
-        <LayoutResizer>
-          <CameraController />
-          <GridOverlay size={gridSize} />
-          {children}
-        </LayoutResizer>
-      </Application>
-    </CameraProvider>
+    <Application resizeTo={window} antialias={true} eventMode="static">
+      <LayoutResizer>
+        <CameraController />
+        <GridOverlay size={gridSize} />
+        {children}
+      </LayoutResizer>
+    </Application>
   );
 }

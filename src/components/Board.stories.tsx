@@ -2,6 +2,7 @@ import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor } from "storybook/test";
 import { useEffect } from "react";
 import { Board } from "./Board";
+import { CameraProvider } from "../contexts/CameraProvider";
 import { useCamera } from "../hooks/useCamera";
 import type { CameraState } from "../utils/cameraMath";
 
@@ -11,6 +12,12 @@ const fullViewportDecorator: Decorator = (Story) => (
   <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
     <Story />
   </div>
+);
+
+const cameraProviderDecorator: Decorator = (Story) => (
+  <CameraProvider>
+    <Story />
+  </CameraProvider>
 );
 
 const GRID_SIZE = 64;
@@ -34,7 +41,7 @@ function CameraStateCapture() {
 const meta: Meta<typeof Board> = {
   title: "Combat/Board",
   component: Board,
-  decorators: [fullViewportDecorator],
+  decorators: [fullViewportDecorator, cameraProviderDecorator],
   parameters: {
     layout: "fullscreen",
   },

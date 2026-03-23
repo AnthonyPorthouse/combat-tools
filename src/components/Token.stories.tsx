@@ -5,6 +5,7 @@ import type { Vector2 } from "../lib/vector2";
 import { createToken, type TokenSize } from "../types/token";
 import { Board } from "./Board";
 import { TokenDisplay } from "./Token";
+import { CameraProvider } from "../contexts/CameraProvider";
 
 /** Wraps Token stories in a full-viewport container so Pixi's resizeTo=window
  * has a measurable height to fill. */
@@ -12,6 +13,12 @@ const fullViewportDecorator: Decorator = (Story) => (
   <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
     <Story />
   </div>
+);
+
+const cameraProviderDecorator: Decorator = (Story) => (
+  <CameraProvider>
+    <Story />
+  </CameraProvider>
 );
 
 const GRID_SIZE = 64;
@@ -28,7 +35,7 @@ type StoryArgs = {
 
 const meta: Meta<StoryArgs> = {
   title: "Combat/Token",
-  decorators: [fullViewportDecorator],
+  decorators: [fullViewportDecorator, cameraProviderDecorator],
   parameters: {
     layout: "fullscreen",
   },
