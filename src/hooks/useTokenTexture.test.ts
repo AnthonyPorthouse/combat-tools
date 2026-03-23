@@ -67,6 +67,24 @@ describe("useTokenTexture", () => {
     expect(result.current.texture).toBeNull();
   });
 
+  it("does not update state after unmount on load error", async () => {
+    let rejectLoad!: (err: Error) => void;
+    const pendingLoad = new Promise<never>((_, rej) => {
+      rejectLoad = rej;
+    });
+    vi.mocked(Assets.load).mockReturnValue(pendingLoad as never);
+
+    const { result, unmount } = renderHook(() => useTokenTexture({ imageUrl: "bad.png" }));
+    unmount(); // sets cancelled = true
+
+    await act(async () => {
+      rejectLoad(new Error("fail"));
+      await pendingLoad.catch(() => {});
+    });
+
+    expect(result.current.texture).toBeNull();
+  });
+
   it("re-runs and updates texture when imageUrl changes", async () => {
     const textureA = { id: "a" };
     const textureB = { id: "b" };

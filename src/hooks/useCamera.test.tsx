@@ -12,6 +12,12 @@ function renderCamera(options: CameraProviderOptions = {}) {
 }
 
 describe("useCamera", () => {
+  it("throws when called outside a CameraProvider", () => {
+    expect(() => renderHook(() => useCamera())).toThrow(
+      "useCamera must be used inside CameraProvider",
+    );
+  });
+
   describe("initial state", () => {
     it("defaults to zoom=1, pan={x:0,y:0}", () => {
       const { result } = renderCamera();

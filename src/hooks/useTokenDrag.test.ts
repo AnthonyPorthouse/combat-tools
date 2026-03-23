@@ -174,6 +174,59 @@ describe("useTokenDrag", () => {
     expect(result.current.ghostScreenPos).toBeNull();
   });
 
+  it("skips registering stage listeners when app is null", () => {
+    const { result } = renderHook(() => useTokenDrag(makeOptions({ app: null })));
+    expect(result.current.ghostScreenPos).toBeNull();
+    expect(result.current.dropZoneScreenPos).toBeNull();
+  });
+
+  it("pointerup is a no-op when not dragging", () => {
+    const onMove = vi.fn();
+    const app = makeApp();
+    renderHook(() => useTokenDrag(makeOptions({ app: app as never, onMove })));
+
+    act(() => {
+      app.stage.emit("pointerup");
+    });
+
+    expect(onMove).not.toHaveBeenCalled();
+  });
+
+  it("dropZoneScreenPos centres a half-size token within its grid cell", () => {
+    // tokenScreenPos=(160,160), click at (160,160) → offset={0,0}
+    // move to (192,192) → ghostScreenPos=(192,192)
+    // screenToWorld({192,192}, zoom=1 pan=0) → {192,192}
+    // worldToGridCell({192,192}, 64) → col=3, row=3
+    // size=0.5, tokenWorldSize=32: cellWorldX = 3×64 + (64−32)/2 = 192+16 = 208
+    // worldToScreen({208,208}, zoom=1 pan=0) → {208,208}
+    const app = makeApp();
+    const halfToken: Token = { id: "t2", name: "Sprite", size: 0.5 };
+    const { result } = renderHook(() =>
+      useTokenDrag(
+        makeOptions({
+          app: app as never,
+          token: halfToken,
+          tokenWorldSize: 32,
+          tokenScreenPos: { x: 160, y: 160 },
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.handlePointerDown({
+        button: 0,
+        stopPropagation: vi.fn(),
+        global: { x: 160, y: 160 },
+      });
+    });
+
+    act(() => {
+      app.stage.emit("globalpointermove", { global: { x: 192, y: 192 } });
+    });
+
+    expect(result.current.dropZoneScreenPos).toEqual({ x: 208, y: 208 });
+  });
+
   it("stage listeners are removed on unmount", () => {
     const app = makeApp();
     const { unmount } = renderHook(() => useTokenDrag(makeOptions({ app: app as never })));
