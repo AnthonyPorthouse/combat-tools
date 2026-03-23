@@ -52,7 +52,7 @@ describe("CameraController", () => {
     document.body.appendChild(canvas);
     ticker = makeTicker();
     ctx = makeCameraCtx();
-    vi.mocked(useApplication).mockReturnValue({ app: { canvas, ticker } as never });
+    vi.mocked(useApplication).mockReturnValue({ app: { canvas, ticker } } as never);
     vi.mocked(useCamera).mockReturnValue(ctx);
   });
 

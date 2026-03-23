@@ -22,5 +22,10 @@
 ## Review Tasks
 
 - Run `npx tsc --noEmit` to verify there are no build errors
-- Run `npm run lint` to verify we have no eslint issues
+- Run `npm run lint` to verify we have no linting issues
 - Update the `README.md` when new functionality is added, or behaviours are changed
+
+## Environments
+
+- Developer environment started with `npm run dev`, url is http://localhost:5173
+- Storybook environment started with `npm run storybook`, url is http://localhost:6006

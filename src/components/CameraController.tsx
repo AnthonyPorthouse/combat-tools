@@ -15,6 +15,7 @@ export const CameraController = () => {
   const activeKeysRef = useRef(new Set<string>());
 
   useEffect(() => {
+    if (!app) return;
     const view = app.canvas as HTMLCanvasElement | undefined;
     if (!view) return;
 
@@ -100,6 +101,7 @@ export const CameraController = () => {
   }, [app, camera.zoom, zoomAt]);
 
   useEffect(() => {
+    if (!app) return;
     const keys = activeKeysRef.current;
 
     const handleKeyDown = (event: KeyboardEvent) => {
