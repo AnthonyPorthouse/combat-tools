@@ -1,5 +1,4 @@
 import { useApplication } from "@pixi/react";
-import { FederatedPointerEvent } from "pixi.js";
 import { useEffect, useRef } from "react";
 import type { Vector2 } from "../lib/vector2";
 import { useCamera } from "../hooks/useCamera";
@@ -8,7 +7,7 @@ const SCREEN_PAN_SPEED = 700;
 const WHEEL_ZOOM_SENSITIVITY = 0.0015;
 
 export const CameraController = () => {
-  const { camera, panBy, zoomAt } = useCamera();
+  const { camera, panBy, zoomAtByFactor } = useCamera();
 
   const { app } = useApplication();
   const draggingRef = useRef(false);
@@ -16,51 +15,53 @@ export const CameraController = () => {
   const activeKeysRef = useRef(new Set<string>());
 
   useEffect(() => {
-    const stopDrag = () => {
-      draggingRef.current = false;
-      lastPointerRef.current = null;
-    };
+    if (!app) return;
+    const view = app.canvas as HTMLCanvasElement | undefined;
+    if (!view) return;
 
-    const handlePointerDown = (event: FederatedPointerEvent) => {
+    const handlePointerDown = (event: PointerEvent) => {
       if (event.button !== 2) {
         return;
       }
 
       draggingRef.current = true;
       lastPointerRef.current = {
-        x: event.global.x,
-        y: event.global.y,
+        x: event.clientX,
+        y: event.clientY,
       };
     };
 
-    const handlePointerMove = (event: FederatedPointerEvent) => {
+    const handlePointerMove = (event: PointerEvent) => {
       if (!draggingRef.current || !lastPointerRef.current) {
         return;
       }
 
-      const deltaX = event.global.x - lastPointerRef.current.x;
-      const deltaY = event.global.y - lastPointerRef.current.y;
+      const deltaX = event.clientX - lastPointerRef.current.x;
+      const deltaY = event.clientY - lastPointerRef.current.y;
 
       if (deltaX !== 0 || deltaY !== 0) {
         panBy({ x: -deltaX / camera.zoom, y: -deltaY / camera.zoom });
       }
 
       lastPointerRef.current = {
-        x: event.global.x,
-        y: event.global.y,
+        x: event.clientX,
+        y: event.clientY,
       };
     };
 
-    app.stage?.on("pointerdown", handlePointerDown);
-    app.stage?.on("globalpointermove", handlePointerMove);
-    app.stage?.on("pointerup", stopDrag);
-    app.stage?.on("pointerupoutside", stopDrag);
+    const stopDrag = () => {
+      draggingRef.current = false;
+      lastPointerRef.current = null;
+    };
+
+    view.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", stopDrag);
 
     return () => {
-      app.stage?.off("pointerdown", handlePointerDown);
-      app.stage?.off("globalpointermove", handlePointerMove);
-      app.stage?.off("pointerup", stopDrag);
-      app.stage?.off("pointerupoutside", stopDrag);
+      view.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", stopDrag);
     };
   }, [app, camera.zoom, panBy]);
 
@@ -89,7 +90,7 @@ export const CameraController = () => {
       const screenY = event.clientY - bounds.top;
       const zoomFactor = Math.exp(-event.deltaY * WHEEL_ZOOM_SENSITIVITY);
 
-      zoomAt({ x: screenX, y: screenY }, camera.zoom * zoomFactor);
+      zoomAtByFactor({ x: screenX, y: screenY }, zoomFactor);
     };
 
     view.addEventListener("wheel", handleWheel, { passive: false });
@@ -97,9 +98,10 @@ export const CameraController = () => {
     return () => {
       view.removeEventListener("wheel", handleWheel);
     };
-  }, [app, camera.zoom, zoomAt]);
+  }, [app, zoomAtByFactor]);
 
   useEffect(() => {
+    if (!app) return;
     const keys = activeKeysRef.current;
 
     const handleKeyDown = (event: KeyboardEvent) => {

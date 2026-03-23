@@ -20,4 +20,10 @@ const RootLayout = () => (
 export const Route = createRootRoute({
   component: RootLayout,
   notFoundComponent: () => <div className="p-2">Not found!</div>,
+  errorComponent: ({ error }) => (
+    <div className="p-2">
+      <h1 className="text-red-500">Error!</h1>
+      <pre>{String(error)}</pre>
+    </div>
+  ),
 });

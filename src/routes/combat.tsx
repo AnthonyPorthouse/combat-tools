@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useRef, useState } from "react";
 import { Board } from "../components/Board";
+import { CameraProvider } from "../contexts/CameraProvider";
 import { CursorTracker } from "../components/CursorTracker";
 import { DebuggerOverlay } from "../components/DebuggerOverlay";
 import { TokenDisplay } from "../components/Token";
@@ -22,6 +23,14 @@ type TokenPlacement = {
 };
 
 function RouteComponent() {
+  return (
+    <CameraProvider>
+      <CombatContent />
+    </CameraProvider>
+  );
+}
+
+function CombatContent() {
   const combatContainerRef = useRef<HTMLDivElement | null>(null);
   const { gridCell } = useDebuggerOverlay({
     gridSize: GRID_SIZE,

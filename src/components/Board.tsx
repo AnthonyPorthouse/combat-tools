@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import { CameraController } from "./CameraController";
 import { GridOverlay } from "./GridOverlay";
 import { LayoutResizer } from "./LayoutResizer";
-
 extend({ Container, Graphics, LayoutContainer });
 
 type BoardProps = {
