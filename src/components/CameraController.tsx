@@ -7,7 +7,7 @@ const SCREEN_PAN_SPEED = 700;
 const WHEEL_ZOOM_SENSITIVITY = 0.0015;
 
 export const CameraController = () => {
-  const { camera, panBy, zoomAt } = useCamera();
+  const { camera, panBy, zoomAtByFactor } = useCamera();
 
   const { app } = useApplication();
   const draggingRef = useRef(false);
@@ -90,7 +90,7 @@ export const CameraController = () => {
       const screenY = event.clientY - bounds.top;
       const zoomFactor = Math.exp(-event.deltaY * WHEEL_ZOOM_SENSITIVITY);
 
-      zoomAt({ x: screenX, y: screenY }, camera.zoom * zoomFactor);
+      zoomAtByFactor({ x: screenX, y: screenY }, zoomFactor);
     };
 
     view.addEventListener("wheel", handleWheel, { passive: false });
@@ -98,7 +98,7 @@ export const CameraController = () => {
     return () => {
       view.removeEventListener("wheel", handleWheel);
     };
-  }, [app, camera.zoom, zoomAt]);
+  }, [app, zoomAtByFactor]);
 
   useEffect(() => {
     if (!app) return;

@@ -42,6 +42,18 @@ export function CameraProvider({
     [maxZoom, minZoom],
   );
 
+  const zoomAtByFactor = useCallback(
+    (screen: Vector2, factor: number) => {
+      setCamera((current) => {
+        const oldZoom = clampZoom(current.zoom, minZoom, maxZoom);
+        const nextZoom = clampZoom(oldZoom * factor, minZoom, maxZoom);
+        if (oldZoom === nextZoom) return { ...current, zoom: nextZoom };
+        return zoomAtScreenPoint({ ...current, zoom: oldZoom }, screen, nextZoom);
+      });
+    },
+    [maxZoom, minZoom],
+  );
+
   const zoomAt = useCallback(
     (screen: Vector2, zoom: number) => {
       setCamera((current) => {
@@ -59,7 +71,9 @@ export function CameraProvider({
   );
 
   return (
-    <CameraContext.Provider value={{ camera, setPan, panBy, setZoom, zoomAt, minZoom, maxZoom }}>
+    <CameraContext.Provider
+      value={{ camera, setPan, panBy, setZoom, zoomAt, zoomAtByFactor, minZoom, maxZoom }}
+    >
       {children}
     </CameraContext.Provider>
   );

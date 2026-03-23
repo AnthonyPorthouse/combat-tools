@@ -170,6 +170,84 @@ describe("useCamera", () => {
     });
   });
 
+  describe("zoomAtByFactor", () => {
+    it("scales the current zoom by the given factor", () => {
+      const { result } = renderCamera({ initialZoom: 2 });
+
+      act(() => {
+        result.current.zoomAtByFactor({ x: 0, y: 0 }, 1.5);
+      });
+
+      expect(result.current.camera.zoom).toBeCloseTo(3);
+    });
+
+    it("accumulates correctly across multiple calls without stale state", () => {
+      const { result } = renderCamera({ initialZoom: 1 });
+      const factor = Math.exp(150 * 0.0015); // ≈ 1.252, same as one scroll-up event
+
+      act(() => {
+        result.current.zoomAtByFactor({ x: 0, y: 0 }, factor);
+        result.current.zoomAtByFactor({ x: 0, y: 0 }, factor);
+        result.current.zoomAtByFactor({ x: 0, y: 0 }, factor);
+        result.current.zoomAtByFactor({ x: 0, y: 0 }, factor);
+        result.current.zoomAtByFactor({ x: 0, y: 0 }, factor);
+      });
+
+      // 1 × factor^5 = exp(5 × 0.225) = exp(1.125) ≈ 3.08
+      expect(result.current.camera.zoom).toBeCloseTo(3.08, 1);
+    });
+
+    it("adjusts pan so the world point under the screen point is preserved", () => {
+      const { result } = renderCamera({ initialZoom: 1 });
+      const screen = { x: 200, y: 150 };
+
+      const worldBefore = screenToWorld(screen, result.current.camera);
+
+      act(() => {
+        result.current.zoomAtByFactor(screen, 2);
+      });
+
+      const worldAfter = screenToWorld(screen, result.current.camera);
+      expect(worldAfter.x).toBeCloseTo(worldBefore.x);
+      expect(worldAfter.y).toBeCloseTo(worldBefore.y);
+    });
+
+    it("clamps the result to maxZoom when the factor would exceed it", () => {
+      const { result } = renderCamera({ initialZoom: 7, maxZoom: 8 });
+
+      act(() => {
+        result.current.zoomAtByFactor({ x: 0, y: 0 }, 10);
+      });
+
+      expect(result.current.camera.zoom).toBe(8);
+    });
+
+    it("clamps the result to minZoom when the factor would go below it", () => {
+      const { result } = renderCamera({ initialZoom: 0.2, minZoom: 0.1 });
+
+      act(() => {
+        result.current.zoomAtByFactor({ x: 0, y: 0 }, 0.1);
+      });
+
+      expect(result.current.camera.zoom).toBe(0.1);
+    });
+
+    it("does not change pan when already at the zoom bound", () => {
+      const { result } = renderCamera({
+        initialZoom: 0.1,
+        minZoom: 0.1,
+        initialPan: { x: 50, y: 50 },
+      });
+
+      act(() => {
+        result.current.zoomAtByFactor({ x: 100, y: 100 }, 0.5);
+      });
+
+      expect(result.current.camera.pan.x).toBe(50);
+      expect(result.current.camera.pan.y).toBe(50);
+    });
+  });
+
   describe("zoomAt", () => {
     it("updates the zoom level", () => {
       const { result } = renderCamera();

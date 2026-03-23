@@ -144,11 +144,8 @@ export const ZoomedIn: Story = {
 
     // Each event: zoomFactor = exp(-(-150) * 0.0015) ≈ 1.252
     // After 5 events: exp(1.125) ≈ 3.08×
-    // Await between events so React can re-render and the wheel handler picks
-    // up the updated camera.zoom before the next event fires.
     for (let i = 0; i < 5; i++) {
       fireWheel(canvas, -150);
-      await new Promise<void>((r) => setTimeout(r, 50));
     }
 
     await waitFor(() => expect(cameraSnapshot.zoom).toBeCloseTo(3.08, 1));
@@ -175,11 +172,8 @@ export const ZoomedOut: Story = {
 
     // Each event: zoomFactor = exp(-(150) * 0.0015) ≈ 0.799
     // After 5 events: exp(-1.125) ≈ 0.32×
-    // Await between events so React can re-render and the wheel handler picks
-    // up the updated camera.zoom before the next event fires.
     for (let i = 0; i < 5; i++) {
       fireWheel(canvas, 150);
-      await new Promise<void>((r) => setTimeout(r, 50));
     }
 
     await waitFor(() => expect(cameraSnapshot.zoom).toBeCloseTo(0.32, 1));

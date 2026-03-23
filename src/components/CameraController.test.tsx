@@ -35,6 +35,7 @@ function makeCameraCtx(zoom = 1) {
     camera: { zoom, pan: { x: 0, y: 0 } },
     panBy: vi.fn(),
     zoomAt: vi.fn(),
+    zoomAtByFactor: vi.fn(),
     setPan: vi.fn(),
     setZoom: vi.fn(),
     minZoom: MIN_CAMERA_ZOOM,
@@ -151,7 +152,7 @@ describe("CameraController", () => {
   // ---------------------------------------------------------------------------
 
   describe("wheel zoom", () => {
-    it("calls zoomAt on scroll-up (zoom in)", () => {
+    it("calls zoomAtByFactor on scroll-up (zoom in)", () => {
       render(<CameraController />);
 
       // getBoundingClientRect returns zeros in jsdom, so screenX = clientX - 0 = clientX
@@ -165,12 +166,12 @@ describe("CameraController", () => {
         }),
       );
 
-      expect(ctx.zoomAt).toHaveBeenCalledWith({ x: 50, y: 80 }, expect.any(Number));
-      const [, nextZoom] = vi.mocked(ctx.zoomAt).mock.calls[0];
-      expect(nextZoom).toBeGreaterThan(1); // scroll up → zoom in
+      expect(ctx.zoomAtByFactor).toHaveBeenCalledWith({ x: 50, y: 80 }, expect.any(Number));
+      const [, factor] = vi.mocked(ctx.zoomAtByFactor).mock.calls[0];
+      expect(factor).toBeGreaterThan(1); // scroll up → factor > 1 → zoom in
     });
 
-    it("calls zoomAt on scroll-down (zoom out)", () => {
+    it("calls zoomAtByFactor on scroll-down (zoom out)", () => {
       render(<CameraController />);
 
       canvas.dispatchEvent(
@@ -183,8 +184,8 @@ describe("CameraController", () => {
         }),
       );
 
-      const [, nextZoom] = vi.mocked(ctx.zoomAt).mock.calls[0];
-      expect(nextZoom).toBeLessThan(1); // scroll down → zoom out
+      const [, factor] = vi.mocked(ctx.zoomAtByFactor).mock.calls[0];
+      expect(factor).toBeLessThan(1); // scroll down → factor < 1 → zoom out
     });
 
     it("uses the cursor position as the zoom anchor", () => {
@@ -200,7 +201,7 @@ describe("CameraController", () => {
         }),
       );
 
-      const [screenPoint] = vi.mocked(ctx.zoomAt).mock.calls[0];
+      const [screenPoint] = vi.mocked(ctx.zoomAtByFactor).mock.calls[0];
       expect(screenPoint).toEqual({ x: 320, y: 240 });
     });
 

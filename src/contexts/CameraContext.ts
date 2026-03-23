@@ -8,6 +8,7 @@ export type CameraContextValue = {
   panBy: (delta: Vector2) => void;
   setZoom: (zoom: number) => void;
   zoomAt: (screen: Vector2, zoom: number) => void;
+  zoomAtByFactor: (screen: Vector2, factor: number) => void;
   minZoom: number;
   maxZoom: number;
 };

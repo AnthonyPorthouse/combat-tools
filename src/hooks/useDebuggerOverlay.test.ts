@@ -37,6 +37,7 @@ function makeCameraReturn(camera: CameraState) {
     panBy: vi.fn(),
     setZoom: vi.fn(),
     zoomAt: vi.fn(),
+    zoomAtByFactor: vi.fn(),
     minZoom: MIN_CAMERA_ZOOM,
     maxZoom: MAX_CAMERA_ZOOM,
   };
