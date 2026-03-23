@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { CameraController } from "./CameraController";
 import { GridOverlay } from "./GridOverlay";
 import { LayoutResizer } from "./LayoutResizer";
-import { CameraProvider } from "../contexts/CameraContext";
+import { CameraProvider } from "../contexts/CameraProvider";
 
 extend({ Container, Graphics, LayoutContainer });
 
