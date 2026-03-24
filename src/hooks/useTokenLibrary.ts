@@ -7,8 +7,8 @@ export type UseTokenLibraryResult = {
   removeFromLibrary: (id: string) => void;
 };
 
-export function useTokenLibrary(): UseTokenLibraryResult {
-  const [tokenLibrary, setTokenLibrary] = useState<Token[]>([]);
+export function useTokenLibrary(initialTokens: Token[] = []): UseTokenLibraryResult {
+  const [tokenLibrary, setTokenLibrary] = useState<Token[]>(() => initialTokens);
 
   const addToLibrary = useCallback((token: Token) => {
     setTokenLibrary((prev) => [...prev, token]);

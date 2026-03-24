@@ -46,19 +46,22 @@ function CombatContent() {
 
   const [showCursorTracker, _setShowCursorTracker] = useState(false);
 
+  const [seedTokens] = useState<Token[]>(() => [
+    createToken("Goblin", 1),
+    createToken("Sprite", 0.5),
+  ]);
+
   const [tokenPlacements, setTokenPlacements] = useState<Map<string, TokenPlacement>>(() => {
     const map = new Map<string, TokenPlacement>();
-    const goblin = createToken("Goblin", 1);
-    const sprite = createToken("Sprite", 0.5);
-    map.set(goblin.id, { token: goblin, position: { x: 0, y: 0 } });
-    map.set(sprite.id, { token: sprite, position: { x: 2, y: 0 } });
+    map.set(seedTokens[0].id, { token: seedTokens[0], position: { x: 0, y: 0 } });
+    map.set(seedTokens[1].id, { token: seedTokens[1], position: { x: 2, y: 0 } });
     return map;
   });
 
   const [hoveredTokenName, setHoveredTokenName] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { tokenLibrary, addToLibrary } = useTokenLibrary();
+  const { tokenLibrary, addToLibrary } = useTokenLibrary(seedTokens);
   const draggedTokenRef = useRef<Token | null>(null);
 
   const handleTokenHover = useCallback((name: string | null) => {
