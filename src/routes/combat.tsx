@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Board } from "../components/Board";
 import { CameraProvider } from "../contexts/CameraProvider";
 import { CursorTracker } from "../components/CursorTracker";
@@ -16,6 +16,9 @@ export const Route = createFileRoute("/combat")({
 
 /** Grid cell size in world-space units — must match the value passed to GridOverlay. */
 const GRID_SIZE = 64;
+
+/** Token movement speed in cells per second. */
+const MOVEMENT_SPEED = 5;
 
 type TokenPlacement = {
   token: Token;
@@ -64,19 +67,29 @@ function CombatContent() {
     });
   }, []);
 
+  const tokenPlacementsList = useMemo(() => [...tokenPlacements.values()], [tokenPlacements]);
+
   return (
     <div ref={combatContainerRef} style={{ position: "relative" }}>
       <Board gridSize={GRID_SIZE}>
-        {[...tokenPlacements.values()].map(({ token, position }) => (
-          <TokenDisplay
-            key={token.id}
-            token={token}
-            position={position}
-            gridSize={GRID_SIZE}
-            onMove={handleTokenMove}
-            onHoverChange={handleTokenHover}
-          />
-        ))}
+        {tokenPlacementsList.map(({ token, position }) => {
+          const obstacles = tokenPlacementsList
+            .filter((p) => p.token.id !== token.id)
+            .map((p) => ({ position: p.position, size: p.token.size }));
+
+          return (
+            <TokenDisplay
+              key={token.id}
+              token={token}
+              position={position}
+              gridSize={GRID_SIZE}
+              onMove={handleTokenMove}
+              onHoverChange={handleTokenHover}
+              movementSpeed={MOVEMENT_SPEED}
+              obstacles={obstacles}
+            />
+          );
+        })}
         {showCursorTracker && <CursorTracker />}
       </Board>
       <DebuggerOverlay gridCell={gridCell} hoveredToken={hoveredTokenName} />

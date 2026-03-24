@@ -227,6 +227,108 @@ describe("useTokenDrag", () => {
     expect(result.current.dropZoneScreenPos).toEqual({ x: 208, y: 208 });
   });
 
+  it("targetCell is null when not dragging", () => {
+    const { result } = renderHook(() => useTokenDrag(makeOptions()));
+    expect(result.current.targetCell).toBeNull();
+  });
+
+  it("targetCell snaps to the correct grid cell during drag", () => {
+    // ghost at screen (192, 192) → world (192, 192) → cell round(192/64)=3
+    const app = makeApp();
+    const { result } = renderHook(() => useTokenDrag(makeOptions({ app: app as never })));
+
+    act(() => {
+      result.current.handlePointerDown({
+        button: 0,
+        stopPropagation: vi.fn(),
+        global: { x: 160, y: 160 },
+      });
+    });
+
+    act(() => {
+      app.stage.emit("globalpointermove", { global: { x: 224, y: 224 } });
+    });
+
+    expect(result.current.targetCell).toEqual({ col: 3, row: 3 });
+  });
+
+  it("targetCell updates when the ghost moves to a different cell", () => {
+    const app = makeApp();
+    const { result } = renderHook(() => useTokenDrag(makeOptions({ app: app as never })));
+
+    act(() => {
+      result.current.handlePointerDown({
+        button: 0,
+        stopPropagation: vi.fn(),
+        global: { x: 160, y: 160 },
+      });
+    });
+
+    act(() => {
+      app.stage.emit("globalpointermove", { global: { x: 224, y: 224 } });
+    });
+    expect(result.current.targetCell).toEqual({ col: 3, row: 3 });
+
+    act(() => {
+      app.stage.emit("globalpointermove", { global: { x: 352, y: 352 } });
+    });
+    // click at (160,160) → offset=(32,32); cursor=(352,352) → ghost=(320,320)
+    // world=(320,320) → cell=round(320/64)=5
+    expect(result.current.targetCell).toEqual({ col: 5, row: 5 });
+  });
+
+  it("resolveTargetCell is applied to the onMove cell", () => {
+    // raw cell: click at (160,160)→offset(32,32); move to (224,224)→ghost(192,192)→world(192,192)→cell(3,3)
+    // resolver adds (10,10) → expect onMove called with (13,13)
+    const onMove = vi.fn();
+    const resolveTargetCell = vi.fn((raw: { col: number; row: number }) => ({
+      col: raw.col + 10,
+      row: raw.row + 10,
+    }));
+    const app = makeApp();
+    const { result } = renderHook(() =>
+      useTokenDrag(makeOptions({ app: app as never, onMove, resolveTargetCell })),
+    );
+
+    act(() => {
+      result.current.handlePointerDown({
+        button: 0,
+        stopPropagation: vi.fn(),
+        global: { x: 160, y: 160 },
+      });
+    });
+    act(() => {
+      app.stage.emit("globalpointermove", { global: { x: 224, y: 224 } });
+    });
+    act(() => {
+      app.stage.emit("pointerup");
+    });
+
+    expect(resolveTargetCell).toHaveBeenCalledWith({ col: 3, row: 3 });
+    expect(onMove).toHaveBeenCalledWith("t1", { x: 13, y: 13 });
+  });
+
+  it("targetCell reflects the resolved cell", () => {
+    const resolveTargetCell = vi.fn(() => ({ col: 99, row: 99 }));
+    const app = makeApp();
+    const { result } = renderHook(() =>
+      useTokenDrag(makeOptions({ app: app as never, resolveTargetCell })),
+    );
+
+    act(() => {
+      result.current.handlePointerDown({
+        button: 0,
+        stopPropagation: vi.fn(),
+        global: { x: 160, y: 160 },
+      });
+    });
+    act(() => {
+      app.stage.emit("globalpointermove", { global: { x: 224, y: 224 } });
+    });
+
+    expect(result.current.targetCell).toEqual({ col: 99, row: 99 });
+  });
+
   it("stage listeners are removed on unmount", () => {
     const app = makeApp();
     const { unmount } = renderHook(() => useTokenDrag(makeOptions({ app: app as never })));
