@@ -2,10 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Board } from "../components/Board";
 import { CameraProvider } from "../contexts/CameraProvider";
+import { CreateTokenModal } from "../components/CreateTokenModal";
 import { CursorTracker } from "../components/CursorTracker";
 import { DebuggerOverlay } from "../components/DebuggerOverlay";
 import { TokenDisplay } from "../components/Token";
+import { TokenLibraryOverlay } from "../components/TokenLibraryOverlay";
 import { useDebuggerOverlay } from "../hooks/useDebuggerOverlay";
+import { useLibraryDrop } from "../hooks/useLibraryDrop";
+import { useTokenLibrary } from "../hooks/useTokenLibrary";
 import { createToken } from "../types/token";
 import type { Token } from "../types/token";
 import type { Vector2 } from "../lib/vector2";
@@ -52,6 +56,10 @@ function CombatContent() {
   });
 
   const [hoveredTokenName, setHoveredTokenName] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { tokenLibrary, addToLibrary } = useTokenLibrary();
+  const draggedTokenRef = useRef<Token | null>(null);
 
   const handleTokenHover = useCallback((name: string | null) => {
     setHoveredTokenName(name);
@@ -67,10 +75,33 @@ function CombatContent() {
     });
   }, []);
 
+  const handleLibraryDrop = useCallback((token: Token, position: Vector2) => {
+    setTokenPlacements((prev) => {
+      const next = new Map(prev);
+      next.set(token.id, { token, position });
+      return next;
+    });
+  }, []);
+
+  const handleCreateToken = useCallback(
+    (token: Token) => {
+      addToLibrary(token);
+      setIsModalOpen(false);
+    },
+    [addToLibrary],
+  );
+
+  const { dropAreaProps } = useLibraryDrop({
+    containerRef: combatContainerRef,
+    gridSize: GRID_SIZE,
+    draggedTokenRef,
+    onDrop: handleLibraryDrop,
+  });
+
   const tokenPlacementsList = useMemo(() => [...tokenPlacements.values()], [tokenPlacements]);
 
   return (
-    <div ref={combatContainerRef} style={{ position: "relative" }}>
+    <div ref={combatContainerRef} style={{ position: "relative" }} {...dropAreaProps}>
       <Board gridSize={GRID_SIZE}>
         {tokenPlacementsList.map(({ token, position }) => {
           const obstacles = tokenPlacementsList
@@ -92,7 +123,21 @@ function CombatContent() {
         })}
         {showCursorTracker && <CursorTracker />}
       </Board>
+
       <DebuggerOverlay gridCell={gridCell} hoveredToken={hoveredTokenName} />
+      <TokenLibraryOverlay
+        tokens={tokenLibrary}
+        draggedTokenRef={draggedTokenRef}
+        onDragEnd={() => {
+          draggedTokenRef.current = null;
+        }}
+        onCreateToken={() => setIsModalOpen(true)}
+      />
+      <CreateTokenModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateToken}
+      />
     </div>
   );
 }
