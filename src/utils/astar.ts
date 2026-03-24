@@ -62,21 +62,34 @@ export function makeMoverGrid(occupiedCells: Set<string>, moverSize: number): AS
  * it is returned immediately.
  *
  * Searches outward in expanding Chebyshev rings (radius 0, 1, 2, …) up to a
- * maximum radius of 15. Within each ring, cells are visited top-to-bottom,
- * left-to-right, giving deterministic tie-breaking. Returns `null` if no
- * passable cell is found within the search limit.
+ * maximum radius of 15. At each radius all passable candidates are collected
+ * and the one with the smallest Euclidean distance to `prefer` is returned
+ * (when `prefer` is omitted, the top-left-first candidate is returned).
+ * Returns `null` if no passable cell is found within the search limit.
  */
-export function findNearestValidCell(target: GridCell, grid: AStarGrid): GridCell | null {
+export function findNearestValidCell(
+  target: GridCell,
+  grid: AStarGrid,
+  prefer?: GridCell,
+): GridCell | null {
   const MAX_RADIUS = 15;
   for (let r = 0; r <= MAX_RADIUS; r++) {
+    const candidates: GridCell[] = [];
     for (let dr = -r; dr <= r; dr++) {
       for (let dc = -r; dc <= r; dc++) {
         if (Math.max(Math.abs(dc), Math.abs(dr)) !== r) continue;
         const col = target.col + dc;
         const row = target.row + dr;
-        if (grid.isPassable(col, row)) return { col, row };
+        if (grid.isPassable(col, row)) candidates.push({ col, row });
       }
     }
+    if (candidates.length === 0) continue;
+    if (!prefer) return candidates[0];
+    return candidates.reduce((best, c) => {
+      const dC = Math.hypot(c.col - prefer.col, c.row - prefer.row);
+      const dB = Math.hypot(best.col - prefer.col, best.row - prefer.row);
+      return dC < dB ? c : best;
+    });
   }
   return null;
 }

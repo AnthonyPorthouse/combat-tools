@@ -178,6 +178,16 @@ describe("findNearestValidCell", () => {
     expect(grid.isPassable(result!.col, result!.row)).toBe(true);
   });
 
+  it("prefer: picks the ring-1 candidate closest to prefer, not top-left", () => {
+    // Block (5,5); all 8 ring-1 neighbours are passable.
+    // Without prefer → returns (4,4) (top-left first in iteration order).
+    // With prefer=(7,7) → returns (6,6), the ring-1 cell closest to (7,7).
+    const occupied = new Set(["5,5"]);
+    const grid = makeMoverGrid(occupied, 1);
+    const result = findNearestValidCell({ col: 5, row: 5 }, grid, { col: 7, row: 7 });
+    expect(result).toEqual({ col: 6, row: 6 });
+  });
+
   it("works with a larger mover (size=2) blocked by an obstacle", () => {
     const occupied = new Set(["5,5"]);
     const grid = makeMoverGrid(occupied, 2);

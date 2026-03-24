@@ -154,8 +154,14 @@ export const TokenDisplay = ({
   const resolveTargetCell = useCallback(
     (raw: GridCell): GridCell => {
       const grid = makeMoverGrid(occupiedCells, token.size);
-      if (grid.isPassable(raw.col, raw.row)) return raw;
-      return findNearestValidCell(raw, grid) ?? raw;
+      // raw is a top-left cell; isPassable expects a center cell
+      const center = getTokenCenterCell({ x: raw.col, y: raw.row }, token.size);
+      if (grid.isPassable(center.col, center.row)) return raw;
+      // Find nearest valid center cell, then convert back to top-left
+      const nearestCenter = findNearestValidCell(center, grid, centerCell);
+      if (!nearestCenter) return raw;
+      const offset = token.size < 1 ? 0 : Math.floor((token.size - 1) / 2);
+      return { col: nearestCenter.col - offset, row: nearestCenter.row - offset };
     },
     [occupiedCells, token.size],
   );
