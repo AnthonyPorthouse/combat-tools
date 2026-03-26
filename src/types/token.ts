@@ -9,6 +9,15 @@ import { nanoid } from "nanoid";
  */
 export type TokenSize = 0.5 | 1 | 2 | 3 | 4;
 
+/** Human-readable display names for each token size. */
+export const TOKEN_SIZE_LABELS: Record<TokenSize, string> = {
+  0.5: "Small",
+  1: "Medium",
+  2: "Large",
+  3: "Huge",
+  4: "Gargantuan",
+};
+
 /**
  * Represents a combat token that can be placed on the game board.
  *

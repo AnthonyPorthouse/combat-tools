@@ -13,6 +13,7 @@ type CombatState = {
   addToken: (token: Token, position: Vector2) => void;
   moveToken: (id: string, position: Vector2) => void;
   removeToken: (id: string) => void;
+  updateToken: (token: Token) => void;
 };
 
 export const useCombatStore = create<CombatState>()(
@@ -36,6 +37,13 @@ export const useCombatStore = create<CombatState>()(
       removeToken: (id) =>
         set((state) => {
           delete state.tokenPlacements[id];
+        }),
+
+      updateToken: (token) =>
+        set((state) => {
+          if (state.tokenPlacements[token.id]) {
+            state.tokenPlacements[token.id].token = token;
+          }
         }),
     })),
     {

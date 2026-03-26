@@ -8,6 +8,7 @@ type LibraryState = {
   tokenLibrary: Token[];
   addToLibrary: (token: Token) => void;
   removeFromLibrary: (id: string) => void;
+  updateInLibrary: (token: Token) => void;
 };
 
 export const useLibraryStore = create<LibraryState>()(
@@ -23,6 +24,12 @@ export const useLibraryStore = create<LibraryState>()(
       removeFromLibrary: (id) =>
         set((state) => {
           state.tokenLibrary = state.tokenLibrary.filter((t) => t.id !== id);
+        }),
+
+      updateInLibrary: (token) =>
+        set((state) => {
+          const index = state.tokenLibrary.findIndex((t) => t.id === token.id);
+          if (index !== -1) state.tokenLibrary[index] = token;
         }),
     })),
     {

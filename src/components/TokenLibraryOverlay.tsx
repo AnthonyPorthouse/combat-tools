@@ -11,6 +11,7 @@ type TokenLibraryOverlayProps = {
   draggedTokenRef: RefObject<Token | null>;
   onDragEnd: () => void;
   onCreateToken: () => void;
+  onTokenContextMenu: (token: Token, x: number, y: number) => void;
 };
 
 export function TokenLibraryOverlay({
@@ -18,6 +19,7 @@ export function TokenLibraryOverlay({
   draggedTokenRef,
   onDragEnd,
   onCreateToken,
+  onTokenContextMenu,
 }: TokenLibraryOverlayProps) {
   const handleDragStart = (token: Token) => {
     draggedTokenRef.current = token;
@@ -44,6 +46,7 @@ export function TokenLibraryOverlay({
               token={token}
               onDragStart={handleDragStart}
               onDragEnd={onDragEnd}
+              onContextMenu={onTokenContextMenu}
             />
           ))}
         </div>
