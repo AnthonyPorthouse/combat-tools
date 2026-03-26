@@ -1,9 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render } from "@testing-library/react";
-import { CameraController } from "./CameraController";
 import { useApplication } from "@pixi/react";
+import { render } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
 import { useCamera } from "../hooks/useCamera";
 import { MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM } from "../utils/cameraMath";
+import { CameraController } from "./CameraController";
 
 vi.mock("@pixi/react", () => ({
   useApplication: vi.fn(),
@@ -53,7 +54,7 @@ describe("CameraController", () => {
     document.body.appendChild(canvas);
     ticker = makeTicker();
     ctx = makeCameraCtx();
-    vi.mocked(useApplication).mockReturnValue({ app: { canvas, ticker } } as never);
+    vi.mocked(useApplication).mockReturnValue({ app: { canvas, ticker, renderer: {} } } as never);
     vi.mocked(useCamera).mockReturnValue(ctx);
   });
 

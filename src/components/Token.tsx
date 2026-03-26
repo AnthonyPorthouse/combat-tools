@@ -1,15 +1,25 @@
 import { extend, useApplication } from "@pixi/react";
-import { Circle, Container, Graphics, Sprite, Text, TextStyle } from "pixi.js";
+import {
+  Circle,
+  Container,
+  FederatedPointerEvent,
+  Graphics,
+  Sprite,
+  Text,
+  TextStyle,
+} from "pixi.js";
 import { useCallback, useMemo } from "react";
-import { worldToScreen } from "../utils/cameraMath";
-import type { GridCell } from "../utils/cameraMath";
-import type { Token } from "../types/token";
+
 import type { Vector2 } from "../lib/vector2";
+import type { Token } from "../types/token";
+import type { GridCell } from "../utils/cameraMath";
+
 import { useCamera } from "../hooks/useCamera";
-import { useTokenTexture } from "../hooks/useTokenTexture";
 import { useTokenDrag } from "../hooks/useTokenDrag";
 import { useTokenMovement } from "../hooks/useTokenMovement";
+import { useTokenTexture } from "../hooks/useTokenTexture";
 import { buildOccupiedCells, findNearestValidCell, findPath, makeMoverGrid } from "../utils/astar";
+import { worldToScreen } from "../utils/cameraMath";
 
 extend({ Container, Graphics, Sprite, Text });
 
@@ -37,6 +47,8 @@ type TokenDisplayProps = {
   movementSpeed?: number;
   /** Other tokens that block pathfinding. */
   obstacles?: Array<{ position: Vector2; size: number }>;
+  /** Called on right-click with the token and cursor screen coordinates. */
+  onContextMenu?: (token: Token, x: number, y: number) => void;
 };
 
 /**
@@ -83,6 +95,7 @@ export const TokenDisplay = ({
   onHoverChange,
   movementSpeed = 5,
   obstacles = [],
+  onContextMenu,
 }: TokenDisplayProps) => {
   const { app } = useApplication();
   const { camera } = useCamera();
@@ -163,7 +176,7 @@ export const TokenDisplay = ({
       const offset = token.size < 1 ? 0 : Math.floor((token.size - 1) / 2);
       return { col: nearestCenter.col - offset, row: nearestCenter.row - offset };
     },
-    [occupiedCells, token.size],
+    [occupiedCells, token.size, centerCell],
   );
 
   const {
@@ -183,13 +196,18 @@ export const TokenDisplay = ({
     resolveTargetCell,
   });
 
-  // Prevent starting a new drag while animating.
+  // Prevent starting a new drag while animating; intercept right-click for context menu.
   const handlePointerDown = useCallback(
-    (e: Parameters<typeof rawHandlePointerDown>[0]) => {
+    (e: FederatedPointerEvent) => {
+      if (e.button === 2) {
+        e.stopPropagation();
+        onContextMenu?.(token, e.clientX, e.clientY);
+        return;
+      }
       if (isAnimating) return;
       rawHandlePointerDown(e);
     },
-    [isAnimating, rawHandlePointerDown],
+    [isAnimating, rawHandlePointerDown, onContextMenu, token],
   );
 
   // ---------------------------------------------------------------------------

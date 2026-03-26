@@ -1,10 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useDebuggerOverlay } from "./useDebuggerOverlay";
-import { useCamera } from "./useCamera";
-import { MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM } from "../utils/cameraMath";
 import type { RefObject } from "react";
+
+import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+
 import type { CameraState } from "../utils/cameraMath";
+
+import { MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM } from "../utils/cameraMath";
+import { useCamera } from "./useCamera";
+import { useDebuggerOverlay } from "./useDebuggerOverlay";
 
 vi.mock("./useCamera");
 

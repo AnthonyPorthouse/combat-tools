@@ -1,6 +1,7 @@
 import { createContext } from "react";
-import type { CameraState } from "../utils/cameraMath";
+
 import type { Vector2 } from "../lib/vector2";
+import type { CameraState } from "../utils/cameraMath";
 
 export type CameraContextValue = {
   camera: CameraState;

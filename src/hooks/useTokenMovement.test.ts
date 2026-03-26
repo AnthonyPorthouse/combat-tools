@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useTokenMovement, cellCenterToTopLeftWorldPos } from "./useTokenMovement";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
 import type { UseTokenMovementOptions } from "./useTokenMovement";
+
+import { useTokenMovement, cellCenterToTopLeftWorldPos } from "./useTokenMovement";
 
 // ---------------------------------------------------------------------------
 // Ticker mock — mirrors the stage mock pattern in useTokenDrag.test.ts

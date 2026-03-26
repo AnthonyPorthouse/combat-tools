@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useTokenTexture } from "./useTokenTexture";
 import { Assets } from "pixi.js";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+import { useTokenTexture } from "./useTokenTexture";
 
 vi.mock("pixi.js", () => ({
   Assets: {

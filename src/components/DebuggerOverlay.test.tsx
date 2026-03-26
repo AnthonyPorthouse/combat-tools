@@ -1,7 +1,9 @@
-import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { DebuggerOverlay } from "./DebuggerOverlay";
+import { describe, it, expect } from "vitest";
+
 import type { GridCell } from "../utils/cameraMath";
+
+import { DebuggerOverlay } from "./DebuggerOverlay";
 
 describe("DebuggerOverlay", () => {
   describe("grid cell display", () => {

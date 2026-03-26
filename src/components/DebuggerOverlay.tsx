@@ -10,21 +10,7 @@ export const DebuggerOverlay = ({ gridCell, hoveredToken }: DebuggerOverlayProps
 
   return (
     <div
-      style={{
-        position: "absolute",
-        top: 12,
-        left: 12,
-        zIndex: 10,
-        pointerEvents: "none",
-        background: "rgba(15, 23, 42, 0.8)",
-        color: "#e2e8f0",
-        border: "1px solid rgba(148, 163, 184, 0.45)",
-        borderRadius: 8,
-        padding: "8px 10px",
-        fontSize: 13,
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-        lineHeight: 1.2,
-      }}
+      className="pointer-events-none absolute top-4 left-4 z-10 rounded-md border border-gray-400 bg-gray-800/80 p-2 font-mono text-sm text-gray-200"
       aria-live="polite"
     >
       {label}

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import { addVector2, subtractVector2 } from "./vector2";
 
 describe("addVector2", () => {

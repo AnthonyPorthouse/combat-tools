@@ -1,11 +1,14 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, waitFor } from "storybook/test";
+
 import { useCallback, useState } from "react";
+import { expect, fn, waitFor } from "storybook/test";
+
 import type { Vector2 } from "../lib/vector2";
+
+import { CameraProvider } from "../contexts/CameraProvider";
 import { createToken, type TokenSize } from "../types/token";
 import { Board } from "./Board";
 import { TokenDisplay } from "./Token";
-import { CameraProvider } from "../contexts/CameraProvider";
 
 /** Wraps Token stories in a full-viewport container so Pixi's resizeTo=window
  * has a measurable height to fill. */
