@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { buildOccupiedCells, makeMoverGrid, findPath, findNearestValidCell } from "./astar";
+
 import type { GridCell } from "./cameraMath";
+
+import { buildOccupiedCells, makeMoverGrid, findPath, findNearestValidCell } from "./astar";
 
 // ---------------------------------------------------------------------------
 // buildOccupiedCells

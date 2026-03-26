@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import { createToken, type TokenSize } from "./token";
 
 describe("createToken", () => {

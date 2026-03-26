@@ -1,11 +1,13 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createTokenSchema, TOKEN_SIZES } from "../schemas/createToken";
+
 import type { CreateTokenFormValues } from "../schemas/createToken";
-import { createToken } from "../types/token";
 import type { Token } from "../types/token";
+
+import { createTokenSchema, TOKEN_SIZES } from "../schemas/createToken";
+import { createToken } from "../types/token";
 
 type CreateTokenModalProps = {
   isOpen: boolean;
@@ -13,30 +15,12 @@ type CreateTokenModalProps = {
   onSubmit: (token: Token) => void;
 };
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "6px 8px",
-  borderRadius: 6,
-  border: "1px solid rgba(148, 163, 184, 0.45)",
-  background: "rgba(255, 255, 255, 0.05)",
-  color: "#e2e8f0",
-  fontSize: 13,
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  boxSizing: "border-box",
-};
+const inputClassName =
+  "w-full py-1.5 px-2 rounded-md border border-slate-400/45 bg-white/[0.05] text-slate-200 text-[13px] font-mono box-border";
 
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: 12,
-  color: "#94a3b8",
-  marginBottom: 4,
-};
+const labelClassName = "block text-xs text-slate-400 mb-1";
 
-const errorStyle: React.CSSProperties = {
-  fontSize: 11,
-  color: "#f87171",
-  marginTop: 3,
-};
+const errorClassName = "text-[11px] text-red-400 mt-0.5";
 
 const SIZE_LABELS: Record<number, string> = {
   0.5: "0.5 – Tiny",
@@ -79,62 +63,37 @@ export function CreateTokenModal({ isOpen, onClose, onSubmit }: CreateTokenModal
   return createPortal(
     <div
       onClick={handleBackdropClick}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        background: "rgba(0, 0, 0, 0.6)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "rgba(15, 23, 42, 0.95)",
-          border: "1px solid rgba(148, 163, 184, 0.45)",
-          borderRadius: 10,
-          padding: 20,
-          width: 320,
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-          color: "#e2e8f0",
-        }}
+        className="w-[320px] rounded-[10px] border border-slate-400/45 bg-slate-900/95 p-5 font-mono text-slate-200"
       >
-        <h2
-          style={{
-            margin: "0 0 16px",
-            fontSize: 16,
-            fontWeight: 600,
-            color: "#f1f5f9",
-          }}
-        >
-          Create Token
-        </h2>
+        <h2 className="m-0 mb-4 text-base font-semibold text-slate-100">Create Token</h2>
 
         <form onSubmit={handleSubmit(handleFormSubmit)}>
-          <div style={{ marginBottom: 12 }}>
-            <label htmlFor="token-name" style={labelStyle}>
+          <div className="mb-3">
+            <label htmlFor="token-name" className={labelClassName}>
               Name *
             </label>
             <input
               id="token-name"
               {...register("name")}
               placeholder="Goblin"
-              style={inputStyle}
+              className={inputClassName}
               autoFocus
             />
-            {errors.name && <p style={errorStyle}>{errors.name.message}</p>}
+            {errors.name && <p className={errorClassName}>{errors.name.message}</p>}
           </div>
 
-          <div style={{ marginBottom: 12 }}>
-            <label htmlFor="token-size" style={labelStyle}>
+          <div className="mb-3">
+            <label htmlFor="token-size" className={labelClassName}>
               Size *
             </label>
             <select
               id="token-size"
               {...register("size", { valueAsNumber: true })}
-              style={inputStyle}
+              className={inputClassName}
             >
               {TOKEN_SIZES.map((s) => (
                 <option key={s} value={s}>
@@ -142,11 +101,11 @@ export function CreateTokenModal({ isOpen, onClose, onSubmit }: CreateTokenModal
                 </option>
               ))}
             </select>
-            {errors.size && <p style={errorStyle}>{errors.size.message}</p>}
+            {errors.size && <p className={errorClassName}>{errors.size.message}</p>}
           </div>
 
-          <div style={{ marginBottom: 12 }}>
-            <label htmlFor="token-image" style={labelStyle}>
+          <div className="mb-3">
+            <label htmlFor="token-image" className={labelClassName}>
               Image URL
             </label>
             <input
@@ -154,53 +113,34 @@ export function CreateTokenModal({ isOpen, onClose, onSubmit }: CreateTokenModal
               {...register("image")}
               type="url"
               placeholder="https://example.com/token.png"
-              style={inputStyle}
+              className={inputClassName}
             />
-            {errors.image && <p style={errorStyle}>{errors.image.message}</p>}
+            {errors.image && <p className={errorClassName}>{errors.image.message}</p>}
           </div>
 
-          <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="mb-4 flex items-center gap-2">
             <input
               id="token-locked"
               {...register("locked")}
               type="checkbox"
-              style={{ cursor: "pointer" }}
+              className="cursor-pointer"
             />
-            <label htmlFor="token-locked" style={{ ...labelStyle, margin: 0 }}>
+            <label htmlFor="token-locked" className="block text-xs text-slate-400">
               Locked (cannot be dragged on the board)
             </label>
           </div>
 
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              style={{
-                padding: "6px 14px",
-                borderRadius: 6,
-                border: "1px solid rgba(148, 163, 184, 0.45)",
-                background: "transparent",
-                color: "#94a3b8",
-                cursor: "pointer",
-                fontSize: 13,
-                fontFamily: "inherit",
-              }}
+              className="cursor-pointer rounded-md border border-slate-400/45 bg-transparent px-3.5 py-1.5 text-[13px] text-slate-400"
             >
               Cancel
             </button>
             <button
               type="submit"
-              style={{
-                padding: "6px 14px",
-                borderRadius: 6,
-                border: "none",
-                background: "#3b82f6",
-                color: "#fff",
-                cursor: "pointer",
-                fontSize: 13,
-                fontFamily: "inherit",
-                fontWeight: 500,
-              }}
+              className="cursor-pointer rounded-md border-none bg-blue-500 px-3.5 py-1.5 text-[13px] font-medium text-white"
             >
               Create
             </button>

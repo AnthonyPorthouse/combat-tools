@@ -1,9 +1,11 @@
-import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useCamera } from "./useCamera";
+import { describe, it, expect } from "vitest";
+
 import type { CameraProviderOptions } from "./useCamera";
+
 import { CameraProvider } from "../contexts/CameraProvider";
 import { MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM, screenToWorld } from "../utils/cameraMath";
+import { useCamera } from "./useCamera";
 
 function renderCamera(options: CameraProviderOptions = {}) {
   return renderHook(() => useCamera(), {

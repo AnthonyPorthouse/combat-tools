@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useTokenDrag } from "./useTokenDrag";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
 import type { Token } from "../types/token";
+
+import { useTokenDrag } from "./useTokenDrag";
 
 // pixi.js is only referenced as `import type` in useTokenDrag, so no mock needed.
 

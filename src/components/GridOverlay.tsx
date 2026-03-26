@@ -1,7 +1,9 @@
 import { useApplication } from "@pixi/react";
 import { Graphics } from "pixi.js";
 import { useCallback, useEffect, useState } from "react";
+
 import type { Vector2 } from "../lib/vector2";
+
 import { useCamera } from "../hooks/useCamera";
 
 type GridOverlayProps = {

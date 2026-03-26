@@ -1,18 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useMemo, useRef, useState } from "react";
+
+import type { Vector2 } from "../lib/vector2";
+import type { Token } from "../types/token";
+
 import { Board } from "../components/Board";
-import { CameraProvider } from "../contexts/CameraProvider";
 import { CreateTokenModal } from "../components/CreateTokenModal";
 import { CursorTracker } from "../components/CursorTracker";
 import { DebuggerOverlay } from "../components/DebuggerOverlay";
 import { TokenDisplay } from "../components/Token";
 import { TokenLibraryOverlay } from "../components/TokenLibraryOverlay";
+import { CameraProvider } from "../contexts/CameraProvider";
 import { useDebuggerOverlay } from "../hooks/useDebuggerOverlay";
 import { useLibraryDrop } from "../hooks/useLibraryDrop";
 import { useTokenLibrary } from "../hooks/useTokenLibrary";
 import { createToken } from "../types/token";
-import type { Token } from "../types/token";
-import type { Vector2 } from "../lib/vector2";
 
 export const Route = createFileRoute("/combat")({
   component: RouteComponent,
@@ -104,8 +106,8 @@ function CombatContent() {
   const tokenPlacementsList = useMemo(() => [...tokenPlacements.values()], [tokenPlacements]);
 
   return (
-    <div ref={combatContainerRef} style={{ position: "relative" }} {...dropAreaProps}>
-      <Board gridSize={GRID_SIZE}>
+    <div ref={combatContainerRef} className="relative flex-grow" {...dropAreaProps}>
+      <Board container={combatContainerRef} gridSize={GRID_SIZE}>
         {tokenPlacementsList.map(({ token, position }) => {
           const obstacles = tokenPlacementsList
             .filter((p) => p.token.id !== token.id)

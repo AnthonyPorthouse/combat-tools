@@ -1,10 +1,13 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
-import { expect, waitFor } from "storybook/test";
+
 import { useEffect } from "react";
-import { Board } from "./Board";
+import { expect, waitFor } from "storybook/test";
+
+import type { CameraState } from "../utils/cameraMath";
+
 import { CameraProvider } from "../contexts/CameraProvider";
 import { useCamera } from "../hooks/useCamera";
-import type { CameraState } from "../utils/cameraMath";
+import { Board } from "./Board";
 
 /** Wraps Board stories in a full-viewport container so Pixi's resizeTo=window
  * has a measurable height to fill. */

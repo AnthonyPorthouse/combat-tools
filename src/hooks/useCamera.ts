@@ -1,4 +1,5 @@
 import { useContext } from "react";
+
 import { CameraContext } from "../contexts/CameraContext";
 
 export type { CameraContextValue, CameraProviderOptions } from "../contexts/CameraContext";

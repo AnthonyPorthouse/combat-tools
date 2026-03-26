@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useTokenLibrary } from "./useTokenLibrary";
+import { describe, it, expect } from "vitest";
+
 import { createToken } from "../types/token";
+import { useTokenLibrary } from "./useTokenLibrary";
 
 describe("useTokenLibrary", () => {
   it("initialises with an empty library", () => {

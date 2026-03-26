@@ -1,9 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render } from "@testing-library/react";
-import { CameraController } from "./CameraController";
 import { useApplication } from "@pixi/react";
+import { render } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
 import { useCamera } from "../hooks/useCamera";
 import { MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM } from "../utils/cameraMath";
+import { CameraController } from "./CameraController";
 
 vi.mock("@pixi/react", () => ({
   useApplication: vi.fn(),

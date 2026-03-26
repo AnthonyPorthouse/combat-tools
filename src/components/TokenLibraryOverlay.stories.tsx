@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+
 import { useRef } from "react";
-import { TokenLibraryOverlay } from "./TokenLibraryOverlay";
-import { createToken } from "../types/token";
+import { fn } from "storybook/test";
+
 import type { Token } from "../types/token";
+
+import { createToken } from "../types/token";
+import { TokenLibraryOverlay } from "./TokenLibraryOverlay";
 
 const meta: Meta<typeof TokenLibraryOverlay> = {
   title: "Combat/TokenLibraryOverlay",

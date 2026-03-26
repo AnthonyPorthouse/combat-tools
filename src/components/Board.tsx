@@ -1,20 +1,23 @@
+import type { ReactNode, RefObject } from "react";
+
+import { LayoutContainer } from "@pixi/layout/components";
 import { Application, extend } from "@pixi/react";
 import { Container, Graphics } from "pixi.js";
-import { LayoutContainer } from "@pixi/layout/components";
-import type { ReactNode } from "react";
+
 import { CameraController } from "./CameraController";
 import { GridOverlay } from "./GridOverlay";
 import { LayoutResizer } from "./LayoutResizer";
 extend({ Container, Graphics, LayoutContainer });
 
 type BoardProps = {
+  container: RefObject<HTMLDivElement | null>;
   gridSize?: number;
   children?: ReactNode;
 };
 
-export function Board({ gridSize = 64, children }: BoardProps) {
+export function Board({ container, gridSize = 64, children }: BoardProps) {
   return (
-    <Application resizeTo={window} antialias={true} eventMode="static">
+    <Application resizeTo={container.current || undefined} antialias={true} eventMode="static">
       <LayoutResizer>
         <CameraController />
         <GridOverlay size={gridSize} />

@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+
 import { expect, fn, userEvent, within } from "storybook/test";
+
 import { CreateTokenModal } from "./CreateTokenModal";
 
 const meta: Meta<typeof CreateTokenModal> = {

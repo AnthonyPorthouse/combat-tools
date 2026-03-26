@@ -1,4 +1,6 @@
 import { useCallback, useState, type PropsWithChildren } from "react";
+
+import { addVector2, type Vector2 } from "../lib/vector2";
 import {
   clampZoom,
   MAX_CAMERA_ZOOM,
@@ -6,7 +8,6 @@ import {
   zoomAtScreenPoint,
   type CameraState,
 } from "../utils/cameraMath";
-import { addVector2, type Vector2 } from "../lib/vector2";
 import { CameraContext, type CameraProviderOptions } from "./CameraContext";
 
 export function CameraProvider({

@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Application } from "pixi.js";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import type { Vector2 } from "../lib/vector2";
+import type { Token } from "../types/token";
+
 import {
   screenToWorld,
   worldToGridCell,
@@ -7,8 +12,6 @@ import {
   type CameraState,
   type GridCell,
 } from "../utils/cameraMath";
-import type { Vector2 } from "../lib/vector2";
-import type { Token } from "../types/token";
 
 export type UseTokenDragOptions = {
   app: Application | null;
