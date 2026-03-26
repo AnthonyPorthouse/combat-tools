@@ -29,7 +29,7 @@ export const GridOverlay = ({ size = DEFAULT_GRID_SIZE }: GridOverlayProps) => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (!app?.screen) return;
+      if (!app?.renderer) return;
       setViewport({
         width: app.screen.width,
         height: app.screen.height,
@@ -42,7 +42,7 @@ export const GridOverlay = ({ size = DEFAULT_GRID_SIZE }: GridOverlayProps) => {
     return () => {
       app.renderer?.off("resize", handleResize);
     };
-  }, [app]);
+  }, [app, app?.renderer]);
 
   const drawCallback = useCallback(
     (graphics: Graphics) => {

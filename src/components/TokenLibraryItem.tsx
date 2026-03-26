@@ -9,11 +9,11 @@ type TokenLibraryItemProps = {
 };
 
 const SIZE_LABELS: Record<number, string> = {
-  0.5: "Tiny",
-  1: "Small",
-  2: "Medium",
-  3: "Large",
-  4: "Huge",
+  0.5: "Small",
+  1: "Medium",
+  2: "Large",
+  3: "Huge",
+  4: "Gargantuan",
 };
 
 export function TokenLibraryItem({ token, onDragStart, onDragEnd }: TokenLibraryItemProps) {

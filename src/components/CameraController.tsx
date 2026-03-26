@@ -17,7 +17,7 @@ export const CameraController = () => {
   const activeKeysRef = useRef(new Set<string>());
 
   useEffect(() => {
-    if (!app) return;
+    if (!app?.renderer) return;
     const view = app.canvas as HTMLCanvasElement | undefined;
     if (!view) return;
 
@@ -65,19 +65,19 @@ export const CameraController = () => {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", stopDrag);
     };
-  }, [app, camera.zoom, panBy]);
+  }, [app, app?.renderer, camera.zoom, panBy]);
 
   useEffect(() => {
-    if (!app) return;
+    if (!app?.renderer) return;
     const view = app.canvas as HTMLCanvasElement | undefined;
     if (!view) return;
     const suppress = (e: MouseEvent) => e.preventDefault();
     view.addEventListener("contextmenu", suppress);
     return () => view.removeEventListener("contextmenu", suppress);
-  }, [app]);
+  }, [app, app?.renderer]);
 
   useEffect(() => {
-    if (!app) return;
+    if (!app?.renderer) return;
     const view = app.canvas as HTMLCanvasElement | undefined;
 
     if (!view) {
@@ -100,10 +100,10 @@ export const CameraController = () => {
     return () => {
       view.removeEventListener("wheel", handleWheel);
     };
-  }, [app, zoomAtByFactor]);
+  }, [app, app?.renderer, zoomAtByFactor]);
 
   useEffect(() => {
-    if (!app) return;
+    if (!app?.renderer) return;
     const keys = activeKeysRef.current;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -170,7 +170,7 @@ export const CameraController = () => {
       window.removeEventListener("blur", handleBlur);
       app.ticker?.remove(tick);
     };
-  }, [app, camera.zoom, panBy]);
+  }, [app, app?.renderer, camera.zoom, panBy]);
 
   return null;
 };

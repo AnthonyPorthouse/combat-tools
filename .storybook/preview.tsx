@@ -1,8 +1,20 @@
-import type { Preview } from "@storybook/react-vite";
+import type { Decorator, Preview } from "@storybook/react-vite";
 
 import "../src/index.css";
+import { useCombatStore } from "../src/stores/combatStore";
+import { useLibraryStore } from "../src/stores/libraryStore";
+
+const resetStoresDecorator: Decorator = (Story) => {
+  useCombatStore.persist.clearStorage();
+  useLibraryStore.persist.clearStorage();
+  useCombatStore.setState({ tokenPlacements: {} }, true);
+  useLibraryStore.setState({ tokenLibrary: [] }, true);
+  return <Story />;
+};
 
 const preview: Preview = {
+  decorators: [resetStoresDecorator],
+
   parameters: {
     controls: {
       matchers: {
