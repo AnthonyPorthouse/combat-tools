@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
@@ -14,10 +14,13 @@ import { EditTokenModal } from "../components/EditTokenModal";
 import { TokenDisplay } from "../components/Token";
 import { TokenLibraryOverlay } from "../components/TokenLibraryOverlay";
 import { CameraProvider } from "../contexts/CameraProvider";
+import { DebuggerProvider } from "../contexts/DebuggerProvider";
+import { useCamera } from "../hooks/useCamera";
 import { useDebuggerOverlay } from "../hooks/useDebuggerOverlay";
 import { useLibraryDrop } from "../hooks/useLibraryDrop";
 import { useCombatStore } from "../stores/combatStore";
 import { useLibraryStore } from "../stores/libraryStore";
+import { screenToWorld, worldToGridCell } from "../utils/cameraMath";
 
 export const Route = createFileRoute("/combat")({
   component: RouteComponent,
@@ -39,7 +42,9 @@ type ContextMenuState = {
 function RouteComponent() {
   return (
     <CameraProvider>
-      <CombatContent />
+      <DebuggerProvider>
+        <CombatContent />
+      </DebuggerProvider>
     </CameraProvider>
   );
 }
@@ -53,10 +58,38 @@ function CombatContent() {
     setContainerEl(el);
   }, []);
 
-  const { entries, set, remove } = useDebuggerOverlay({
-    gridSize: GRID_SIZE,
-    containerRef: combatContainerRef,
-  });
+  const { camera } = useCamera();
+  const { entries, set, remove } = useDebuggerOverlay();
+
+  const cameraRef = useRef(camera);
+  useEffect(() => {
+    cameraRef.current = camera;
+  }, [camera]);
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const canvas = combatContainerRef.current?.querySelector("canvas");
+      if (!canvas) {
+        set("grid", "(--, --)");
+        return;
+      }
+      const rect = canvas.getBoundingClientRect();
+      const inside =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+      if (!inside) {
+        set("grid", "(--, --)");
+        return;
+      }
+      const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      const cell = worldToGridCell(screenToWorld(screen, cameraRef.current), GRID_SIZE);
+      set("grid", `(${cell.col}, ${cell.row})`);
+    };
+    globalThis.addEventListener("pointermove", handlePointerMove);
+    return () => globalThis.removeEventListener("pointermove", handlePointerMove);
+  }, [combatContainerRef, set]);
 
   const [showCursorTracker, _setShowCursorTracker] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

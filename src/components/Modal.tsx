@@ -31,6 +31,8 @@ export function Modal({ isOpen, onClose, children }: Readonly<ModalProps>) {
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
     >
       <div
+        role="dialog"
+        aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className="w-[320px] rounded-[10px] border border-slate-400/45 bg-slate-900/95 p-5 font-mono text-slate-200"
       >
