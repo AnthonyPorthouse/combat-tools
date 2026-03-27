@@ -96,7 +96,7 @@ export const TokenDisplay = ({
   movementSpeed = 5,
   obstacles = [],
   onContextMenu,
-}: TokenDisplayProps) => {
+}: Readonly<TokenDisplayProps>) => {
   const { app } = useApplication();
   const { camera } = useCamera();
 

@@ -14,7 +14,7 @@ export function ConfirmModal({
   onConfirm,
   title,
   description,
-}: ConfirmModalProps) {
+}: Readonly<ConfirmModalProps>) {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="m-0 mb-2 text-base font-semibold text-slate-100">{title}</h2>

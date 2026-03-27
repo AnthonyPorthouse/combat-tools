@@ -16,7 +16,7 @@ export function TokenLibraryItem({
   onDragStart,
   onDragEnd,
   onContextMenu,
-}: TokenLibraryItemProps) {
+}: Readonly<TokenLibraryItemProps>) {
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData("text/plain", token.id);
     e.dataTransfer.effectAllowed = "copy";

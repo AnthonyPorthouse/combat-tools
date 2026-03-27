@@ -15,7 +15,7 @@ type BoardProps = {
   children?: ReactNode;
 };
 
-export function Board({ container, gridSize = 64, children }: BoardProps) {
+export function Board({ container, gridSize = 64, children }: Readonly<BoardProps>) {
   return (
     <Application resizeTo={container ?? window} antialias={true} eventMode="static">
       <LayoutResizer>

@@ -23,7 +23,12 @@ const labelClassName = "block text-xs text-slate-400 mb-1";
 
 const errorClassName = "text-[11px] text-red-400 mt-0.5";
 
-export function EditTokenModal({ isOpen, onClose, onSubmit, initialToken }: EditTokenModalProps) {
+export function EditTokenModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialToken,
+}: Readonly<EditTokenModalProps>) {
   const {
     register,
     handleSubmit,

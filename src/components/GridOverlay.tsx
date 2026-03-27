@@ -20,7 +20,7 @@ const positiveModulo = (value: number, modulus: number) => {
   return ((value % modulus) + modulus) % modulus;
 };
 
-export const GridOverlay = ({ size = DEFAULT_GRID_SIZE }: GridOverlayProps) => {
+export const GridOverlay = ({ size = DEFAULT_GRID_SIZE }: Readonly<GridOverlayProps>) => {
   const { app } = useApplication();
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const {

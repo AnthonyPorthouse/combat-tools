@@ -11,7 +11,7 @@ type ModalProps = {
   children: ReactNode;
 };
 
-export function Modal({ isOpen, onClose, children }: ModalProps) {
+export function Modal({ isOpen, onClose, children }: Readonly<ModalProps>) {
   useInert(isOpen);
 
   useEffect(() => {

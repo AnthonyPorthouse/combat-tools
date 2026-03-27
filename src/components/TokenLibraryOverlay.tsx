@@ -20,7 +20,7 @@ export function TokenLibraryOverlay({
   onDragEnd,
   onCreateToken,
   onTokenContextMenu,
-}: TokenLibraryOverlayProps) {
+}: Readonly<TokenLibraryOverlayProps>) {
   const handleDragStart = (token: Token) => {
     draggedTokenRef.current = token;
   };
