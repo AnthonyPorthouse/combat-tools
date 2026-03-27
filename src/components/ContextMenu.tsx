@@ -40,6 +40,7 @@ export function ContextMenu({ position, items, onClose }: Readonly<ContextMenuPr
 
   return createPortal(
     <div
+      role="menu"
       ref={menuRef}
       style={{ left: position.x, top: position.y }}
       className="fixed z-[200] min-w-[140px] overflow-hidden rounded-md border border-slate-400/45 bg-slate-900/95 py-1 font-mono shadow-lg"
@@ -48,6 +49,7 @@ export function ContextMenu({ position, items, onClose }: Readonly<ContextMenuPr
         <button
           key={item.label}
           type="button"
+          role="menuitem"
           onClick={() => {
             item.onClick();
             onClose();

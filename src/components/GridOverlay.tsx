@@ -1,6 +1,6 @@
 import { useApplication } from "@pixi/react";
 import { Graphics } from "pixi.js";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import type { Vector2 } from "../lib/vector2";
 
@@ -20,7 +20,9 @@ const positiveModulo = (value: number, modulus: number) => {
   return ((value % modulus) + modulus) % modulus;
 };
 
-export const GridOverlay = ({ size = DEFAULT_GRID_SIZE }: Readonly<GridOverlayProps>) => {
+export const GridOverlay = memo(function GridOverlay({
+  size = DEFAULT_GRID_SIZE,
+}: Readonly<GridOverlayProps>) {
   const { app } = useApplication();
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const {
@@ -85,4 +87,4 @@ export const GridOverlay = ({ size = DEFAULT_GRID_SIZE }: Readonly<GridOverlayPr
   );
 
   return <pixiGraphics draw={drawCallback} eventMode="none" />;
-};
+});

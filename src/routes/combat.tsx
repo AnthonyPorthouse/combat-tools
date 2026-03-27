@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
@@ -11,13 +11,17 @@ import { CreateTokenModal } from "../components/CreateTokenModal";
 import { CursorTracker } from "../components/CursorTracker";
 import { DebuggerOverlay } from "../components/DebuggerOverlay";
 import { EditTokenModal } from "../components/EditTokenModal";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { TokenDisplay } from "../components/Token";
 import { TokenLibraryOverlay } from "../components/TokenLibraryOverlay";
 import { CameraProvider } from "../contexts/CameraProvider";
+import { DebuggerProvider } from "../contexts/DebuggerProvider";
+import { useCamera } from "../hooks/useCamera";
 import { useDebuggerOverlay } from "../hooks/useDebuggerOverlay";
 import { useLibraryDrop } from "../hooks/useLibraryDrop";
 import { useCombatStore } from "../stores/combatStore";
 import { useLibraryStore } from "../stores/libraryStore";
+import { screenToWorld, worldToGridCell } from "../utils/cameraMath";
 
 export const Route = createFileRoute("/combat")({
   component: RouteComponent,
@@ -25,6 +29,13 @@ export const Route = createFileRoute("/combat")({
 
 /** Grid cell size in world-space units — must match the value passed to GridOverlay. */
 const GRID_SIZE = 64;
+
+const BOARD_FALLBACK = (
+  <div className="flex flex-grow flex-col items-center justify-center gap-3 rounded-md border border-slate-400/45 bg-slate-900/80 font-mono">
+    <p className="text-sm text-slate-200">The game board failed to load.</p>
+    <p className="text-xs text-slate-500">WebGL may be unavailable. Try refreshing the page.</p>
+  </div>
+);
 
 /** Token movement speed in cells per second. */
 const MOVEMENT_SPEED = 5;
@@ -39,7 +50,9 @@ type ContextMenuState = {
 function RouteComponent() {
   return (
     <CameraProvider>
-      <CombatContent />
+      <DebuggerProvider>
+        <CombatContent />
+      </DebuggerProvider>
     </CameraProvider>
   );
 }
@@ -53,10 +66,38 @@ function CombatContent() {
     setContainerEl(el);
   }, []);
 
-  const { entries, set, remove } = useDebuggerOverlay({
-    gridSize: GRID_SIZE,
-    containerRef: combatContainerRef,
-  });
+  const { camera } = useCamera();
+  const { entries, set, remove } = useDebuggerOverlay();
+
+  const cameraRef = useRef(camera);
+  useEffect(() => {
+    cameraRef.current = camera;
+  }, [camera]);
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const canvas = combatContainerRef.current?.querySelector("canvas");
+      if (!canvas) {
+        set("grid", "(--, --)");
+        return;
+      }
+      const rect = canvas.getBoundingClientRect();
+      const inside =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+      if (!inside) {
+        set("grid", "(--, --)");
+        return;
+      }
+      const screen = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      const cell = worldToGridCell(screenToWorld(screen, cameraRef.current), GRID_SIZE);
+      set("grid", `(${cell.col}, ${cell.row})`);
+    };
+    globalThis.addEventListener("pointermove", handlePointerMove);
+    return () => globalThis.removeEventListener("pointermove", handlePointerMove);
+  }, [combatContainerRef, set]);
 
   const [showCursorTracker, _setShowCursorTracker] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -177,30 +218,32 @@ function CombatContent() {
     : [];
 
   return (
-    <div ref={handleCombatContainerRef} className="relative flex-grow" {...dropAreaProps}>
+    <div ref={handleCombatContainerRef} className="relative h-full" {...dropAreaProps}>
       {containerEl && (
-        <Board container={containerEl} gridSize={GRID_SIZE}>
-          {tokenPlacementsList.map(({ token, position }) => {
-            const obstacles = tokenPlacementsList
-              .filter((p) => p.token.id !== token.id)
-              .map((p) => ({ position: p.position, size: p.token.size }));
+        <ErrorBoundary fallback={BOARD_FALLBACK}>
+          <Board container={containerEl} gridSize={GRID_SIZE}>
+            {tokenPlacementsList.map(({ token, position }) => {
+              const obstacles = tokenPlacementsList
+                .filter((p) => p.token.id !== token.id)
+                .map((p) => ({ position: p.position, size: p.token.size }));
 
-            return (
-              <TokenDisplay
-                key={token.id}
-                token={token}
-                position={position}
-                gridSize={GRID_SIZE}
-                onMove={handleTokenMove}
-                onHoverChange={handleTokenHover}
-                movementSpeed={MOVEMENT_SPEED}
-                obstacles={obstacles}
-                onContextMenu={(t, x, y) => handleTokenContextMenu(t, x, y, "board")}
-              />
-            );
-          })}
-          {showCursorTracker && <CursorTracker />}
-        </Board>
+              return (
+                <TokenDisplay
+                  key={token.id}
+                  token={token}
+                  position={position}
+                  gridSize={GRID_SIZE}
+                  onMove={handleTokenMove}
+                  onHoverChange={handleTokenHover}
+                  movementSpeed={MOVEMENT_SPEED}
+                  obstacles={obstacles}
+                  onContextMenu={(t, x, y) => handleTokenContextMenu(t, x, y, "board")}
+                />
+              );
+            })}
+            {showCursorTracker && <CursorTracker />}
+          </Board>
+        </ErrorBoundary>
       )}
 
       <DebuggerOverlay entries={entries} />
