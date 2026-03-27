@@ -4,19 +4,19 @@ import { describe, it, expect } from "vitest";
 import { useDebuggerOverlay } from "../hooks/useDebuggerOverlay";
 import { DebuggerProvider } from "./DebuggerProvider";
 
+function renderOverlay() {
+  return renderHook(() => useDebuggerOverlay(), { wrapper: DebuggerProvider });
+}
+
 describe("DebuggerProvider", () => {
   it("initialises entries with grid set to (--, --)", () => {
-    const { result } = renderHook(() => useDebuggerOverlay(), {
-      wrapper: DebuggerProvider,
-    });
+    const { result } = renderOverlay();
 
     expect(result.current.entries.get("grid")).toBe("(--, --)");
   });
 
   it("set adds a new entry to the map", () => {
-    const { result } = renderHook(() => useDebuggerOverlay(), {
-      wrapper: DebuggerProvider,
-    });
+    const { result } = renderOverlay();
 
     act(() => {
       result.current.set("token", "Goblin");
@@ -26,9 +26,7 @@ describe("DebuggerProvider", () => {
   });
 
   it("set updates an existing entry", () => {
-    const { result } = renderHook(() => useDebuggerOverlay(), {
-      wrapper: DebuggerProvider,
-    });
+    const { result } = renderOverlay();
 
     act(() => {
       result.current.set("token", "Goblin");
@@ -41,9 +39,7 @@ describe("DebuggerProvider", () => {
   });
 
   it("remove deletes an existing entry", () => {
-    const { result } = renderHook(() => useDebuggerOverlay(), {
-      wrapper: DebuggerProvider,
-    });
+    const { result } = renderOverlay();
 
     act(() => {
       result.current.set("token", "Goblin");
@@ -56,9 +52,7 @@ describe("DebuggerProvider", () => {
   });
 
   it("remove is a no-op and returns the same Map reference when the key does not exist", () => {
-    const { result } = renderHook(() => useDebuggerOverlay(), {
-      wrapper: DebuggerProvider,
-    });
+    const { result } = renderOverlay();
 
     const entriesBefore = result.current.entries;
 
@@ -70,9 +64,7 @@ describe("DebuggerProvider", () => {
   });
 
   it("set and remove are stable references across re-renders", () => {
-    const { result, rerender } = renderHook(() => useDebuggerOverlay(), {
-      wrapper: DebuggerProvider,
-    });
+    const { result, rerender } = renderOverlay();
 
     const { set, remove } = result.current;
 
