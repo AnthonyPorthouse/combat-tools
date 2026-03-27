@@ -2,7 +2,7 @@ type DebuggerOverlayProps = {
   entries: Map<string, string>;
 };
 
-export const DebuggerOverlay = ({ entries }: DebuggerOverlayProps) => {
+export const DebuggerOverlay = ({ entries }: Readonly<DebuggerOverlayProps>) => {
   const sorted = [...entries.entries()].sort(([a], [b]) => b.localeCompare(a));
 
   return (

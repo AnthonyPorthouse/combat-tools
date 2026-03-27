@@ -13,7 +13,7 @@ type ContextMenuProps = {
   onClose: () => void;
 };
 
-export function ContextMenu({ position, items, onClose }: ContextMenuProps) {
+export function ContextMenu({ position, items, onClose }: Readonly<ContextMenuProps>) {
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {

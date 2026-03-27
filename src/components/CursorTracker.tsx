@@ -9,7 +9,7 @@ type CursorTrackerProps = {
   cursorRadius?: number;
 };
 
-export const CursorTracker = ({ cursorRadius = 3 }: CursorTrackerProps) => {
+export const CursorTracker = ({ cursorRadius = 3 }: Readonly<CursorTrackerProps>) => {
   const [screenCursorPos, setScreenCursorPos] = useState({ x: 0, y: 0 });
   const { app } = useApplication();
   const { camera } = useCamera();

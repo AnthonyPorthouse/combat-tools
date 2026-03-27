@@ -25,7 +25,7 @@ function makeContainerWithCanvas(rect: DOMRect) {
 
 /** Fire a PointerEvent on window at the given client coordinates. */
 function firePointerMove(clientX: number, clientY: number) {
-  window.dispatchEvent(new PointerEvent("pointermove", { clientX, clientY }));
+  globalThis.dispatchEvent(new PointerEvent("pointermove", { clientX, clientY }));
 }
 
 /** Create a ref-shaped object pointing at the given element. */
@@ -208,7 +208,7 @@ describe("useDebuggerOverlay", () => {
   });
 
   it("removes the pointermove event listener on unmount", () => {
-    const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
+    const removeEventListenerSpy = vi.spyOn(globalThis, "removeEventListener");
 
     const { unmount } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
 

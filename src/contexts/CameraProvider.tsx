@@ -16,7 +16,7 @@ export function CameraProvider({
   initialPan = { x: 0, y: 0 },
   minZoom = MIN_CAMERA_ZOOM,
   maxZoom = MAX_CAMERA_ZOOM,
-}: PropsWithChildren<CameraProviderOptions>) {
+}: Readonly<PropsWithChildren<CameraProviderOptions>>) {
   const [camera, setCamera] = useState<CameraState>(() => ({
     zoom: clampZoom(initialZoom, minZoom, maxZoom),
     pan: initialPan,

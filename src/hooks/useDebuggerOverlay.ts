@@ -39,10 +39,10 @@ export const useDebuggerOverlay = ({ gridSize = 32, containerRef }: UseDebuggerO
       });
     };
 
-    window.addEventListener("pointermove", handlePointerMove);
+    globalThis.addEventListener("pointermove", handlePointerMove);
 
     return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
+      globalThis.removeEventListener("pointermove", handlePointerMove);
     };
   }, [containerRef]);
 

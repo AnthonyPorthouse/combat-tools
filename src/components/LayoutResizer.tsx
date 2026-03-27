@@ -11,7 +11,7 @@ type LayoutEnabledContainer = Container & {
   layout: LayoutDimensions;
 };
 
-export const LayoutResizer = ({ children }: PropsWithChildren) => {
+export const LayoutResizer = ({ children }: Readonly<PropsWithChildren>) => {
   const layoutRef = useRef<LayoutEnabledContainer>(null);
   const { app } = useApplication();
 
