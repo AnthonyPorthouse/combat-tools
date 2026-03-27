@@ -1,7 +1,7 @@
 import { Assets, type Texture } from "pixi.js";
 import { useEffect, useState } from "react";
 
-export const useTokenTexture = ({ imageUrl }: { imageUrl: string | undefined }) => {
+export const useTokenTexture = ({ imageUrl }: Readonly<{ imageUrl: string | undefined }>) => {
   const [texture, setTexture] = useState<Texture | null>(null);
 
   useEffect(() => {

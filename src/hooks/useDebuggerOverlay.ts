@@ -10,7 +10,10 @@ type UseDebuggerOverlayOptions = {
   containerRef: RefObject<HTMLElement | null>;
 };
 
-export const useDebuggerOverlay = ({ gridSize = 32, containerRef }: UseDebuggerOverlayOptions) => {
+export const useDebuggerOverlay = ({
+  gridSize = 32,
+  containerRef,
+}: Readonly<UseDebuggerOverlayOptions>) => {
   const { camera } = useCamera();
   const [screenPosition, setScreenPosition] = useState<Vector2 | null>(null);
 
