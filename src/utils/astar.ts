@@ -67,6 +67,25 @@ export function makeMoverGrid(occupiedCells: Set<string>, moverSize: number): AS
  * (when `prefer` is omitted, the top-left-first candidate is returned).
  * Returns `null` if no passable cell is found within the search limit.
  */
+function getChebyshevRingCells(center: GridCell, radius: number): GridCell[] {
+  const cells: GridCell[] = [];
+  for (let dr = -radius; dr <= radius; dr++) {
+    for (let dc = -radius; dc <= radius; dc++) {
+      if (Math.max(Math.abs(dc), Math.abs(dr)) !== radius) continue;
+      cells.push({ col: center.col + dc, row: center.row + dr });
+    }
+  }
+  return cells;
+}
+
+function closestCell(candidates: GridCell[], prefer: GridCell): GridCell {
+  return candidates.reduce((best, c) => {
+    const dC = Math.hypot(c.col - prefer.col, c.row - prefer.row);
+    const dB = Math.hypot(best.col - prefer.col, best.row - prefer.row);
+    return dC < dB ? c : best;
+  });
+}
+
 export function findNearestValidCell(
   target: GridCell,
   grid: AStarGrid,
@@ -74,22 +93,11 @@ export function findNearestValidCell(
 ): GridCell | null {
   const MAX_RADIUS = 15;
   for (let r = 0; r <= MAX_RADIUS; r++) {
-    const candidates: GridCell[] = [];
-    for (let dr = -r; dr <= r; dr++) {
-      for (let dc = -r; dc <= r; dc++) {
-        if (Math.max(Math.abs(dc), Math.abs(dr)) !== r) continue;
-        const col = target.col + dc;
-        const row = target.row + dr;
-        if (grid.isPassable(col, row)) candidates.push({ col, row });
-      }
-    }
+    const candidates = getChebyshevRingCells(target, r).filter((c) =>
+      grid.isPassable(c.col, c.row),
+    );
     if (candidates.length === 0) continue;
-    if (!prefer) return candidates[0];
-    return candidates.reduce((best, c) => {
-      const dC = Math.hypot(c.col - prefer.col, c.row - prefer.row);
-      const dB = Math.hypot(best.col - prefer.col, best.row - prefer.row);
-      return dC < dB ? c : best;
-    });
+    return prefer ? closestCell(candidates, prefer) : candidates[0];
   }
   return null;
 }
@@ -148,6 +156,63 @@ function heapPop(heap: Node[]): Node {
 
 const MAX_CLOSED = 1000;
 
+/** Reconstructs the path from `node` back to `start` (excludes start, includes end). */
+function reconstructPath(node: Node, start: GridCell): GridCell[] {
+  const path: GridCell[] = [];
+  let current: Node | null = node;
+  while (current && (current.col !== start.col || current.row !== start.row)) {
+    path.unshift({ col: current.col, row: current.row });
+    current = current.parent;
+  }
+  return path;
+}
+
+/** Returns true when a diagonal move (dc, dr) is corner-clipped — both shared orthogonal cells are blocked. */
+function isClippedDiagonal(
+  grid: AStarGrid,
+  fromCol: number,
+  fromRow: number,
+  dc: number,
+  dr: number,
+): boolean {
+  return !grid.isPassable(fromCol + dc, fromRow) && !grid.isPassable(fromCol, fromRow + dr);
+}
+
+/** Adds a new neighbor to the open list, or updates it in-place if already present. */
+function addOrUpdateNeighbor(
+  open: Node[],
+  openMap: Map<string, Node>,
+  neighborKey: string,
+  neighborNode: Node,
+  tentativeG: number,
+  f: number,
+  current: Node,
+): void {
+  const existing = openMap.get(neighborKey);
+  if (existing) {
+    existing.g = tentativeG;
+    existing.f = f;
+    existing.parent = current;
+    // Re-heapify (simple approach: push a duplicate, stale one skipped via closed check)
+    heapPush(open, neighborNode);
+  } else {
+    heapPush(open, neighborNode);
+    openMap.set(neighborKey, neighborNode);
+  }
+}
+
+/** All 8 directional offsets (col, row), excluding (0, 0). */
+const NEIGHBOR_OFFSETS: ReadonlyArray<readonly [number, number]> = [
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1],
+];
+
 /**
  * Finds the shortest path from `start` to `end` on `grid` using A* with
  * 8-directional movement.
@@ -187,14 +252,7 @@ export function findPath(start: GridCell, end: GridCell, grid: AStarGrid): GridC
     const currentKey = cellKey(current.col, current.row);
 
     if (current.col === end.col && current.row === end.row) {
-      // Reconstruct path (exclude start, include end)
-      const path: GridCell[] = [];
-      let node: Node | null = current;
-      while (node && (node.col !== start.col || node.row !== start.row)) {
-        path.unshift({ col: node.col, row: node.row });
-        node = node.parent;
-      }
-      return path;
+      return reconstructPath(current, start);
     }
 
     if (closed.has(currentKey)) continue;
@@ -203,47 +261,27 @@ export function findPath(start: GridCell, end: GridCell, grid: AStarGrid): GridC
 
     if (closed.size > MAX_CLOSED) return null;
 
-    for (let dc = -1; dc <= 1; dc++) {
-      for (let dr = -1; dr <= 1; dr++) {
-        if (dc === 0 && dr === 0) continue;
+    for (const [dc, dr] of NEIGHBOR_OFFSETS) {
+      const nc = current.col + dc;
+      const nr = current.row + dr;
 
-        const nc = current.col + dc;
-        const nr = current.row + dr;
+      if (!grid.isPassable(nc, nr)) continue;
 
-        if (!grid.isPassable(nc, nr)) continue;
+      const isDiagonal = dc !== 0 && dr !== 0;
+      if (isDiagonal && isClippedDiagonal(grid, current.col, current.row, dc, dr)) continue;
 
-        // Diagonal clipping for 1×1 movers only
-        const isDiagonal = dc !== 0 && dr !== 0;
-        if (isDiagonal) {
-          const ortho1Blocked = !grid.isPassable(current.col + dc, current.row);
-          const ortho2Blocked = !grid.isPassable(current.col, current.row + dr);
-          if (ortho1Blocked && ortho2Blocked) continue;
-        }
+      const neighborKey = cellKey(nc, nr);
+      if (closed.has(neighborKey)) continue;
 
-        const neighborKey = cellKey(nc, nr);
-        if (closed.has(neighborKey)) continue;
+      const tentativeG = current.g + (isDiagonal ? DIAG_COST : ORTHO_COST);
+      const existingG = gScore.get(neighborKey) ?? Infinity;
 
-        const tentativeG = current.g + (isDiagonal ? DIAG_COST : ORTHO_COST);
-        const existingG = gScore.get(neighborKey) ?? Infinity;
-
-        if (tentativeG < existingG) {
-          gScore.set(neighborKey, tentativeG);
-          const f = tentativeG + heuristic(nc, nr, end.col, end.row);
-          const neighborNode: Node = { col: nc, row: nr, g: tentativeG, f, parent: current };
-          cameFrom.set(neighborKey, neighborNode);
-
-          const existing = openMap.get(neighborKey);
-          if (existing) {
-            existing.g = tentativeG;
-            existing.f = f;
-            existing.parent = current;
-            // Re-heapify (simple approach: push a duplicate, stale one skipped via closed check)
-            heapPush(open, neighborNode);
-          } else {
-            heapPush(open, neighborNode);
-            openMap.set(neighborKey, neighborNode);
-          }
-        }
+      if (tentativeG < existingG) {
+        gScore.set(neighborKey, tentativeG);
+        const f = tentativeG + heuristic(nc, nr, end.col, end.row);
+        const neighborNode: Node = { col: nc, row: nr, g: tentativeG, f, parent: current };
+        cameFrom.set(neighborKey, neighborNode);
+        addOrUpdateNeighbor(open, openMap, neighborKey, neighborNode, tentativeG, f, current);
       }
     }
   }
