@@ -17,7 +17,7 @@ type BoardProps = {
 
 export function Board({ container, gridSize = 64, children }: Readonly<BoardProps>) {
   return (
-    <Application resizeTo={container ?? globalThis} antialias={true} eventMode="static">
+    <Application resizeTo={container ?? window} antialias={true} eventMode="static">
       <LayoutResizer>
         <CameraController />
         <GridOverlay size={gridSize} />

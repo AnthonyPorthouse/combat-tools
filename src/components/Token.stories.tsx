@@ -6,7 +6,7 @@ import { expect, fn, waitFor } from "storybook/test";
 import type { Vector2 } from "../lib/vector2";
 
 import { CameraProvider } from "../contexts/CameraProvider";
-import { createToken, type TokenSize } from "../types/token";
+import { createToken, type Token, type TokenSize } from "../types/token";
 import { Board } from "./Board";
 import { TokenDisplay } from "./Token";
 
@@ -41,7 +41,7 @@ const SNAP_OBSTACLE = createToken("Wall", 1, undefined, true);
 
 type StoryArgs = {
   onMove: (id: string, newPosition: Vector2) => void;
-  onHoverChange: (name: string | null) => void;
+  onHoverChange: (token: Token | null) => void;
 };
 
 const meta: Meta<StoryArgs> = {
