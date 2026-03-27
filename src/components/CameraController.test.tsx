@@ -59,7 +59,7 @@ describe("CameraController", () => {
   });
 
   afterEach(() => {
-    document.body.removeChild(canvas);
+    canvas.remove();
     vi.clearAllMocks();
   });
 

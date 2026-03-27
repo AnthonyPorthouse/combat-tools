@@ -31,7 +31,7 @@ describe("clampZoom", () => {
   });
 
   it("returns 1 for NaN", () => {
-    expect(clampZoom(NaN)).toBe(1);
+    expect(clampZoom(Number.NaN)).toBe(1);
   });
 
   it("returns 1 for Infinity (non-finite guard)", () => {
@@ -154,7 +154,7 @@ describe("worldToGridCell", () => {
   });
 
   it("falls back to gridSize 32 when gridSize is NaN", () => {
-    expect(worldToGridCell({ x: 32, y: 64 }, NaN)).toEqual({ col: 1, row: 2 });
+    expect(worldToGridCell({ x: 32, y: 64 }, Number.NaN)).toEqual({ col: 1, row: 2 });
   });
 });
 

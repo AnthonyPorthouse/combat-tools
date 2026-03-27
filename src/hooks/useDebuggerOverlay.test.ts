@@ -56,7 +56,7 @@ describe("useDebuggerOverlay", () => {
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    container.remove();
     vi.clearAllMocks();
   });
 
@@ -79,7 +79,7 @@ describe("useDebuggerOverlay", () => {
     });
 
     expect(result.current.entries.get("grid")).toBe("(--, --)");
-    document.body.removeChild(emptyContainer);
+    emptyContainer.remove();
   });
 
   it("sets the grid entry to (col, row) when the pointer moves inside the canvas", () => {

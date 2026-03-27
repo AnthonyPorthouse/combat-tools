@@ -76,7 +76,7 @@ export function useTokenMovement({
   gridSize,
   tokenSize,
   movementSpeed = DEFAULT_MOVEMENT_SPEED,
-}: UseTokenMovementOptions): UseTokenMovementResult {
+}: Readonly<UseTokenMovementOptions>): UseTokenMovementResult {
   const [animatedWorldPos, setAnimatedWorldPos] = useState<Vector2 | null>(null);
   const [remainingPath, setRemainingPath] = useState<GridCell[]>([]);
 
@@ -116,7 +116,7 @@ export function useTokenMovement({
 
       const dx = s.targetWorldPos.x - s.currentWorldPos.x;
       const dy = s.targetWorldPos.y - s.currentWorldPos.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = Math.hypot(dx, dy);
 
       if (distThisFrame >= dist) {
         // Arrived at this waypoint — snap to it and advance.

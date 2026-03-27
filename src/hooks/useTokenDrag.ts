@@ -54,7 +54,7 @@ export const useTokenDrag = ({
   tokenWorldSize,
   tokenScreenPos,
   resolveTargetCell,
-}: UseTokenDragOptions): UseTokenDragResult => {
+}: Readonly<UseTokenDragOptions>): UseTokenDragResult => {
   const [ghostScreenPos, setGhostScreenPos] = useState<Vector2 | null>(null);
   const isDraggingRef = useRef(false);
   const ghostScreenPosRef = useRef<Vector2 | null>(null);

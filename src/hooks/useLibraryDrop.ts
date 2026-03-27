@@ -28,7 +28,7 @@ export function useLibraryDrop({
   gridSize,
   draggedTokenRef,
   onDrop,
-}: UseLibraryDropOptions): UseLibraryDropResult {
+}: Readonly<UseLibraryDropOptions>): UseLibraryDropResult {
   const { camera } = useCamera();
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
