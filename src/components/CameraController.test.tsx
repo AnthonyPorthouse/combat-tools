@@ -74,7 +74,7 @@ describe("CameraController", () => {
       canvas.dispatchEvent(
         new PointerEvent("pointerdown", { button: 2, clientX: 100, clientY: 100, bubbles: true }),
       );
-      window.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 150 }));
+      globalThis.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 150 }));
 
       // delta = (100, 50); panBy receives -delta / zoom(1)
       expect(ctx.panBy).toHaveBeenCalledWith({ x: -100, y: -50 });
@@ -86,7 +86,7 @@ describe("CameraController", () => {
       canvas.dispatchEvent(
         new PointerEvent("pointerdown", { button: 0, clientX: 100, clientY: 100, bubbles: true }),
       );
-      window.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 150 }));
+      globalThis.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 150 }));
 
       expect(ctx.panBy).not.toHaveBeenCalled();
     });
@@ -97,8 +97,8 @@ describe("CameraController", () => {
       canvas.dispatchEvent(
         new PointerEvent("pointerdown", { button: 2, clientX: 100, clientY: 100, bubbles: true }),
       );
-      window.dispatchEvent(new PointerEvent("pointerup"));
-      window.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 150 }));
+      globalThis.dispatchEvent(new PointerEvent("pointerup"));
+      globalThis.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 150 }));
 
       expect(ctx.panBy).not.toHaveBeenCalled();
     });
@@ -112,7 +112,7 @@ describe("CameraController", () => {
         new PointerEvent("pointerdown", { button: 2, clientX: 100, clientY: 100, bubbles: true }),
       );
       // Move diagonally so both axes have a real delta (avoids -0 vs 0 comparison issues)
-      window.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 150 }));
+      globalThis.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 150 }));
 
       // deltaX=100 / zoom=2 → x=-50; deltaY=50 / zoom=2 → y=-25
       expect(ctx.panBy).toHaveBeenCalledWith({ x: -50, y: -25 });
@@ -124,8 +124,8 @@ describe("CameraController", () => {
       canvas.dispatchEvent(
         new PointerEvent("pointerdown", { button: 2, clientX: 100, clientY: 100, bubbles: true }),
       );
-      window.dispatchEvent(new PointerEvent("pointermove", { clientX: 160, clientY: 110 }));
-      window.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 120 }));
+      globalThis.dispatchEvent(new PointerEvent("pointermove", { clientX: 160, clientY: 110 }));
+      globalThis.dispatchEvent(new PointerEvent("pointermove", { clientX: 200, clientY: 120 }));
 
       expect(ctx.panBy).toHaveBeenCalledTimes(2);
       expect(ctx.panBy).toHaveBeenNthCalledWith(1, { x: -60, y: -10 });
@@ -134,7 +134,7 @@ describe("CameraController", () => {
 
     it("removes pointer event listeners on unmount", () => {
       const canvasSpy = vi.spyOn(canvas, "removeEventListener");
-      const windowSpy = vi.spyOn(window, "removeEventListener");
+      const windowSpy = vi.spyOn(globalThis, "removeEventListener");
 
       const { unmount } = render(<CameraController />);
       unmount();
@@ -224,7 +224,7 @@ describe("CameraController", () => {
     it("pans right on KeyD", () => {
       render(<CameraController />);
 
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
       ticker._fire();
 
       expect(ctx.panBy).toHaveBeenCalledOnce();
@@ -236,7 +236,7 @@ describe("CameraController", () => {
     it("pans right on ArrowRight", () => {
       render(<CameraController />);
 
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "ArrowRight" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "ArrowRight" }));
       ticker._fire();
 
       const [{ x }] = vi.mocked(ctx.panBy).mock.calls[0];
@@ -246,7 +246,7 @@ describe("CameraController", () => {
     it("pans left on KeyA", () => {
       render(<CameraController />);
 
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyA" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyA" }));
       ticker._fire();
 
       const [{ x, y }] = vi.mocked(ctx.panBy).mock.calls[0];
@@ -257,7 +257,7 @@ describe("CameraController", () => {
     it("pans up on KeyW", () => {
       render(<CameraController />);
 
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyW" }));
       ticker._fire();
 
       const [{ x, y }] = vi.mocked(ctx.panBy).mock.calls[0];
@@ -268,7 +268,7 @@ describe("CameraController", () => {
     it("pans down on ArrowDown", () => {
       render(<CameraController />);
 
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "ArrowDown" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "ArrowDown" }));
       ticker._fire();
 
       const [{ x, y }] = vi.mocked(ctx.panBy).mock.calls[0];
@@ -280,8 +280,8 @@ describe("CameraController", () => {
       render(<CameraController />);
 
       // Holding both right and down simultaneously
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyS" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyS" }));
       ticker._fire();
 
       const [{ x, y }] = vi.mocked(ctx.panBy).mock.calls[0];
@@ -300,8 +300,8 @@ describe("CameraController", () => {
     it("stops panning after keyup", () => {
       render(<CameraController />);
 
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
-      window.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyD" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
+      globalThis.dispatchEvent(new KeyboardEvent("keyup", { code: "KeyD" }));
       ticker._fire();
 
       expect(ctx.panBy).not.toHaveBeenCalled();
@@ -310,15 +310,15 @@ describe("CameraController", () => {
     it("clears all held keys on window blur", () => {
       render(<CameraController />);
 
-      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
-      window.dispatchEvent(new Event("blur"));
+      globalThis.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
+      globalThis.dispatchEvent(new Event("blur"));
       ticker._fire();
 
       expect(ctx.panBy).not.toHaveBeenCalled();
     });
 
     it("removes keyboard and ticker listeners on unmount", () => {
-      const windowSpy = vi.spyOn(window, "removeEventListener");
+      const windowSpy = vi.spyOn(globalThis, "removeEventListener");
       const { unmount } = render(<CameraController />);
       unmount();
 
