@@ -17,31 +17,30 @@ type Story = StoryObj<typeof DebuggerOverlay>;
 /** Default state: cursor not tracked, no token hovered. */
 export const NoData: Story = {
   args: {
-    gridCell: null,
-    hoveredToken: null,
+    entries: new Map([["grid", "(--, --)"]]),
   },
 };
 
 /** Shows grid coordinates when the cursor is tracked. */
 export const WithGridCell: Story = {
   args: {
-    gridCell: { col: 5, row: 3 },
-    hoveredToken: null,
+    entries: new Map([["grid", "(5, 3)"]]),
   },
 };
 
 /** Shows both grid position and the hovered token name. */
 export const WithHoveredToken: Story = {
   args: {
-    gridCell: { col: 5, row: 3 },
-    hoveredToken: "Goblin",
+    entries: new Map([
+      ["grid", "(5, 3)"],
+      ["token", "Goblin"],
+    ]),
   },
 };
 
 /** Validates display with negative coordinates (camera panned left/up). */
 export const NegativeCoordinates: Story = {
   args: {
-    gridCell: { col: -12, row: -7 },
-    hoveredToken: null,
+    entries: new Map([["grid", "(-12, -7)"]]),
   },
 };

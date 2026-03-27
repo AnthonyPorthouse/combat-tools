@@ -1,52 +1,65 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 
-import type { GridCell } from "../utils/cameraMath";
-
 import { DebuggerOverlay } from "./DebuggerOverlay";
 
+function makeEntries(obj: Record<string, string> = {}): Map<string, string> {
+  return new Map(Object.entries(obj));
+}
+
 describe("DebuggerOverlay", () => {
-  describe("grid cell display", () => {
-    it("shows placeholder dashes when gridCell is null", () => {
-      render(<DebuggerOverlay gridCell={null} hoveredToken={null} />);
-      expect(screen.getByText("Grid: (--, --)")).toBeInTheDocument();
+  describe("grid entry display", () => {
+    it("shows placeholder dashes when grid entry is (--, --)", () => {
+      render(<DebuggerOverlay entries={makeEntries({ grid: "(--, --)" })} />);
+      expect(screen.getByText("grid: (--, --)")).toBeInTheDocument();
     });
 
-    it("shows the column and row when gridCell is provided", () => {
-      const gridCell: GridCell = { col: 3, row: 7 };
-      render(<DebuggerOverlay gridCell={gridCell} hoveredToken={null} />);
-      expect(screen.getByText("Grid: (3, 7)")).toBeInTheDocument();
+    it("shows the column and row when grid entry is set", () => {
+      render(<DebuggerOverlay entries={makeEntries({ grid: "(3, 7)" })} />);
+      expect(screen.getByText("grid: (3, 7)")).toBeInTheDocument();
     });
 
     it("shows negative coordinates correctly", () => {
-      const gridCell: GridCell = { col: -2, row: -5 };
-      render(<DebuggerOverlay gridCell={gridCell} hoveredToken={null} />);
-      expect(screen.getByText("Grid: (-2, -5)")).toBeInTheDocument();
+      render(<DebuggerOverlay entries={makeEntries({ grid: "(-2, -5)" })} />);
+      expect(screen.getByText("grid: (-2, -5)")).toBeInTheDocument();
     });
 
     it("shows (0, 0) for the origin cell", () => {
-      const gridCell: GridCell = { col: 0, row: 0 };
-      render(<DebuggerOverlay gridCell={gridCell} hoveredToken={null} />);
-      expect(screen.getByText("Grid: (0, 0)")).toBeInTheDocument();
+      render(<DebuggerOverlay entries={makeEntries({ grid: "(0, 0)" })} />);
+      expect(screen.getByText("grid: (0, 0)")).toBeInTheDocument();
     });
   });
 
-  describe("hovered token display", () => {
-    it("does not render a token name when hoveredToken is null", () => {
-      render(<DebuggerOverlay gridCell={null} hoveredToken={null} />);
-      expect(screen.queryByText(/Token:/)).not.toBeInTheDocument();
+  describe("token entry display", () => {
+    it("does not render a token entry when not set", () => {
+      render(<DebuggerOverlay entries={makeEntries({ grid: "(--, --)" })} />);
+      expect(screen.queryByText(/^token:/)).not.toBeInTheDocument();
     });
 
-    it("renders the token name when hoveredToken is provided", () => {
-      render(<DebuggerOverlay gridCell={null} hoveredToken="Goblin" />);
-      expect(screen.getByText("Token: Goblin")).toBeInTheDocument();
+    it("renders the token entry when set", () => {
+      render(<DebuggerOverlay entries={makeEntries({ grid: "(5, 3)", token: "Goblin" })} />);
+      expect(screen.getByText("token: Goblin")).toBeInTheDocument();
+    });
+  });
+
+  describe("sort order", () => {
+    it("renders entries sorted by key descending (Z→A)", () => {
+      render(<DebuggerOverlay entries={makeEntries({ grid: "(1, 1)", token: "Orc" })} />);
+      const items = screen.getAllByText(/: /);
+      expect(items[0]).toHaveTextContent("token: Orc");
+      expect(items[1]).toHaveTextContent("grid: (1, 1)");
+    });
+
+    it("renders an empty overlay when entries map is empty", () => {
+      const { container } = render(<DebuggerOverlay entries={new Map()} />);
+      expect(container.firstChild).toBeEmptyDOMElement();
     });
   });
 
   describe("accessibility", () => {
     it('has an aria-live="polite" region for screen readers', () => {
-      render(<DebuggerOverlay gridCell={null} hoveredToken={null} />);
-      const region = screen.getByText("Grid: (--, --)").closest("[aria-live]");
+      render(<DebuggerOverlay entries={makeEntries({ grid: "(--, --)" })} />);
+      const region = screen.getByText("grid: (--, --)").closest("[aria-live]");
       expect(region).toHaveAttribute("aria-live", "polite");
     });
   });

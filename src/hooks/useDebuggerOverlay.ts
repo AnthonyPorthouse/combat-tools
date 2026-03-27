@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useState, type RefObject } from "react";
 
 import type { Vector2 } from "../lib/vector2";
 
-import { screenToWorld, worldToGridCell, type GridCell } from "../utils/cameraMath";
+import { screenToWorld, worldToGridCell } from "../utils/cameraMath";
 import { useCamera } from "./useCamera";
 
 type UseDebuggerOverlayOptions = {
@@ -46,7 +46,7 @@ export const useDebuggerOverlay = ({ gridSize = 32, containerRef }: UseDebuggerO
     };
   }, [containerRef]);
 
-  const gridCell: GridCell | null = useMemo(() => {
+  const gridCell = useMemo(() => {
     if (!screenPosition) {
       return null;
     }
@@ -55,7 +55,39 @@ export const useDebuggerOverlay = ({ gridSize = 32, containerRef }: UseDebuggerO
     return worldToGridCell(world, gridSize);
   }, [camera, gridSize, screenPosition]);
 
+  const [entries, setEntries] = useState<Map<string, string>>(
+    () => new Map([["grid", "(--, --)"]]),
+  );
+
+  useEffect(() => {
+    const label = gridCell ? `(${gridCell.col}, ${gridCell.row})` : "(--, --)";
+    setEntries((prev) => {
+      const next = new Map(prev);
+      next.set("grid", label);
+      return next;
+    });
+  }, [gridCell]);
+
+  const set = useCallback((key: string, value: string) => {
+    setEntries((prev) => {
+      const next = new Map(prev);
+      next.set(key, value);
+      return next;
+    });
+  }, []);
+
+  const remove = useCallback((key: string) => {
+    setEntries((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
+  }, []);
+
   return {
-    gridCell,
+    entries,
+    set,
+    remove,
   };
 };

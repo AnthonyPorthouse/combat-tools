@@ -42,7 +42,7 @@ type TokenDisplayProps = {
   /** Called when the token is dropped at a new grid cell. */
   onMove: (id: string, newPosition: Vector2) => void;
   /** Called when the pointer enters or leaves the token. */
-  onHoverChange?: (name: string | null) => void;
+  onHoverChange?: (token: Token | null) => void;
   /** Animation speed in cells per second (default: 5). */
   movementSpeed?: number;
   /** Other tokens that block pathfinding. */
@@ -336,7 +336,7 @@ export const TokenDisplay = ({
         cursor={token.locked ? "default" : "pointer"}
         hitArea={hitArea}
         onPointerDown={handlePointerDown}
-        onPointerOver={() => onHoverChange?.(token.name)}
+        onPointerOver={() => onHoverChange?.(token)}
         onPointerOut={() => onHoverChange?.(null)}
       >
         <pixiGraphics draw={drawCircle} />

@@ -1,20 +1,20 @@
-import type { GridCell } from "../utils/cameraMath";
-
 type DebuggerOverlayProps = {
-  gridCell: GridCell | null;
-  hoveredToken: string | null;
+  entries: Map<string, string>;
 };
 
-export const DebuggerOverlay = ({ gridCell, hoveredToken }: DebuggerOverlayProps) => {
-  const label = gridCell ? `Grid: (${gridCell.col}, ${gridCell.row})` : "Grid: (--, --)";
+export const DebuggerOverlay = ({ entries }: DebuggerOverlayProps) => {
+  const sorted = [...entries.entries()].sort(([a], [b]) => b.localeCompare(a));
 
   return (
     <div
       className="pointer-events-none absolute top-4 left-4 z-10 rounded-md border border-gray-400 bg-gray-800/80 p-2 font-mono text-sm text-gray-200"
       aria-live="polite"
     >
-      {label}
-      {hoveredToken && <div>Token: {hoveredToken}</div>}
+      {sorted.map(([key, value]) => (
+        <div key={key}>
+          {key}: {value}
+        </div>
+      ))}
     </div>
   );
 };

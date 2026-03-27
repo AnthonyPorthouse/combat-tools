@@ -60,13 +60,13 @@ describe("useDebuggerOverlay", () => {
     vi.clearAllMocks();
   });
 
-  it("returns gridCell as null initially", () => {
+  it("sets the grid entry to (--, --) initially", () => {
     const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
 
-    expect(result.current.gridCell).toBeNull();
+    expect(result.current.entries.get("grid")).toBe("(--, --)");
   });
 
-  it("returns null when there is no canvas in the container", () => {
+  it("sets grid entry to (--, --) when there is no canvas in the container", () => {
     const emptyContainer = document.createElement("div");
     document.body.appendChild(emptyContainer);
 
@@ -78,11 +78,11 @@ describe("useDebuggerOverlay", () => {
       firePointerMove(200, 200);
     });
 
-    expect(result.current.gridCell).toBeNull();
+    expect(result.current.entries.get("grid")).toBe("(--, --)");
     document.body.removeChild(emptyContainer);
   });
 
-  it("returns a GridCell when the pointer moves inside the canvas", () => {
+  it("sets the grid entry to (col, row) when the pointer moves inside the canvas", () => {
     const { result } = renderHook(() =>
       useDebuggerOverlay({
         gridSize: 64,
@@ -95,10 +95,10 @@ describe("useDebuggerOverlay", () => {
       firePointerMove(164, 164);
     });
 
-    expect(result.current.gridCell).toEqual({ col: 1, row: 1 });
+    expect(result.current.entries.get("grid")).toBe("(1, 1)");
   });
 
-  it("returns null when the pointer moves outside the canvas horizontally", () => {
+  it("sets grid entry to (--, --) when the pointer moves outside the canvas horizontally", () => {
     const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
 
     act(() => {
@@ -108,10 +108,10 @@ describe("useDebuggerOverlay", () => {
       firePointerMove(50, 200); // outside left edge (left=100)
     });
 
-    expect(result.current.gridCell).toBeNull();
+    expect(result.current.entries.get("grid")).toBe("(--, --)");
   });
 
-  it("returns null when the pointer moves outside the canvas vertically", () => {
+  it("sets grid entry to (--, --) when the pointer moves outside the canvas vertically", () => {
     const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
 
     act(() => {
@@ -121,10 +121,10 @@ describe("useDebuggerOverlay", () => {
       firePointerMove(200, 50); // above top edge (top=100)
     });
 
-    expect(result.current.gridCell).toBeNull();
+    expect(result.current.entries.get("grid")).toBe("(--, --)");
   });
 
-  it("recalculates the grid cell when the camera changes", () => {
+  it("recalculates the grid entry when the camera changes", () => {
     const { result, rerender } = renderHook(() =>
       useDebuggerOverlay({ gridSize: 64, containerRef: makeRef(container) }),
     );
@@ -134,13 +134,77 @@ describe("useDebuggerOverlay", () => {
       firePointerMove(164, 164);
     });
 
-    expect(result.current.gridCell).toEqual({ col: 1, row: 1 });
+    expect(result.current.entries.get("grid")).toBe("(1, 1)");
 
     // With pan=64 the world point shifts: world.x = 64/1 + 64 = 128 → col=2
     vi.mocked(useCamera).mockReturnValue(makeCameraReturn({ zoom: 1, pan: { x: 64, y: 64 } }));
     rerender();
 
-    expect(result.current.gridCell).toEqual({ col: 2, row: 2 });
+    expect(result.current.entries.get("grid")).toBe("(2, 2)");
+  });
+
+  it("set adds a custom entry to the map", () => {
+    const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
+
+    act(() => {
+      result.current.set("token", "Goblin");
+    });
+
+    expect(result.current.entries.get("token")).toBe("Goblin");
+  });
+
+  it("set updates an existing entry", () => {
+    const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
+
+    act(() => {
+      result.current.set("token", "Goblin");
+    });
+    act(() => {
+      result.current.set("token", "Orc");
+    });
+
+    expect(result.current.entries.get("token")).toBe("Orc");
+  });
+
+  it("remove deletes a custom entry from the map", () => {
+    const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
+
+    act(() => {
+      result.current.set("token", "Goblin");
+    });
+    act(() => {
+      result.current.remove("token");
+    });
+
+    expect(result.current.entries.has("token")).toBe(false);
+  });
+
+  it("remove is a no-op when the key does not exist", () => {
+    const { result } = renderHook(() => useDebuggerOverlay({ containerRef: makeRef(container) }));
+
+    const entriesBefore = result.current.entries;
+
+    act(() => {
+      result.current.remove("nonexistent");
+    });
+
+    expect(result.current.entries).toBe(entriesBefore);
+  });
+
+  it("set and remove are stable references across rerenders", () => {
+    const { result, rerender } = renderHook(() =>
+      useDebuggerOverlay({ gridSize: 64, containerRef: makeRef(container) }),
+    );
+
+    const { set, remove } = result.current;
+
+    act(() => {
+      firePointerMove(164, 164);
+    });
+    rerender();
+
+    expect(result.current.set).toBe(set);
+    expect(result.current.remove).toBe(remove);
   });
 
   it("removes the pointermove event listener on unmount", () => {

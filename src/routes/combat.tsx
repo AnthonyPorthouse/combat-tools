@@ -53,13 +53,12 @@ function CombatContent() {
     setContainerEl(el);
   }, []);
 
-  const { gridCell } = useDebuggerOverlay({
+  const { entries, set, remove } = useDebuggerOverlay({
     gridSize: GRID_SIZE,
     containerRef: combatContainerRef,
   });
 
   const [showCursorTracker, _setShowCursorTracker] = useState(false);
-  const [hoveredTokenName, setHoveredTokenName] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -85,9 +84,18 @@ function CombatContent() {
 
   const draggedTokenRef = useRef<Token | null>(null);
 
-  const handleTokenHover = useCallback((name: string | null) => {
-    setHoveredTokenName(name);
-  }, []);
+  const handleTokenHover = useCallback(
+    (token: Token | null) => {
+      if (token !== null) {
+        set("token/id", token.id);
+        set("token/name", token.name);
+      } else {
+        remove("token/id");
+        remove("token/name");
+      }
+    },
+    [set, remove],
+  );
 
   const handleTokenMove = useCallback(
     (id: string, newPosition: Vector2) => {
@@ -195,7 +203,7 @@ function CombatContent() {
         </Board>
       )}
 
-      <DebuggerOverlay gridCell={gridCell} hoveredToken={hoveredTokenName} />
+      <DebuggerOverlay entries={entries} />
       <TokenLibraryOverlay
         tokens={tokenLibrary}
         draggedTokenRef={draggedTokenRef}
