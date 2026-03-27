@@ -11,6 +11,7 @@ import { CreateTokenModal } from "../components/CreateTokenModal";
 import { CursorTracker } from "../components/CursorTracker";
 import { DebuggerOverlay } from "../components/DebuggerOverlay";
 import { EditTokenModal } from "../components/EditTokenModal";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { TokenDisplay } from "../components/Token";
 import { TokenLibraryOverlay } from "../components/TokenLibraryOverlay";
 import { CameraProvider } from "../contexts/CameraProvider";
@@ -28,6 +29,13 @@ export const Route = createFileRoute("/combat")({
 
 /** Grid cell size in world-space units — must match the value passed to GridOverlay. */
 const GRID_SIZE = 64;
+
+const BOARD_FALLBACK = (
+  <div className="flex flex-grow flex-col items-center justify-center gap-3 rounded-md border border-slate-400/45 bg-slate-900/80 font-mono">
+    <p className="text-sm text-slate-200">The game board failed to load.</p>
+    <p className="text-xs text-slate-500">WebGL may be unavailable. Try refreshing the page.</p>
+  </div>
+);
 
 /** Token movement speed in cells per second. */
 const MOVEMENT_SPEED = 5;
@@ -210,30 +218,32 @@ function CombatContent() {
     : [];
 
   return (
-    <div ref={handleCombatContainerRef} className="relative flex-grow" {...dropAreaProps}>
+    <div ref={handleCombatContainerRef} className="relative h-full" {...dropAreaProps}>
       {containerEl && (
-        <Board container={containerEl} gridSize={GRID_SIZE}>
-          {tokenPlacementsList.map(({ token, position }) => {
-            const obstacles = tokenPlacementsList
-              .filter((p) => p.token.id !== token.id)
-              .map((p) => ({ position: p.position, size: p.token.size }));
+        <ErrorBoundary fallback={BOARD_FALLBACK}>
+          <Board container={containerEl} gridSize={GRID_SIZE}>
+            {tokenPlacementsList.map(({ token, position }) => {
+              const obstacles = tokenPlacementsList
+                .filter((p) => p.token.id !== token.id)
+                .map((p) => ({ position: p.position, size: p.token.size }));
 
-            return (
-              <TokenDisplay
-                key={token.id}
-                token={token}
-                position={position}
-                gridSize={GRID_SIZE}
-                onMove={handleTokenMove}
-                onHoverChange={handleTokenHover}
-                movementSpeed={MOVEMENT_SPEED}
-                obstacles={obstacles}
-                onContextMenu={(t, x, y) => handleTokenContextMenu(t, x, y, "board")}
-              />
-            );
-          })}
-          {showCursorTracker && <CursorTracker />}
-        </Board>
+              return (
+                <TokenDisplay
+                  key={token.id}
+                  token={token}
+                  position={position}
+                  gridSize={GRID_SIZE}
+                  onMove={handleTokenMove}
+                  onHoverChange={handleTokenHover}
+                  movementSpeed={MOVEMENT_SPEED}
+                  obstacles={obstacles}
+                  onContextMenu={(t, x, y) => handleTokenContextMenu(t, x, y, "board")}
+                />
+              );
+            })}
+            {showCursorTracker && <CursorTracker />}
+          </Board>
+        </ErrorBoundary>
       )}
 
       <DebuggerOverlay entries={entries} />
