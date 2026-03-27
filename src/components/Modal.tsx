@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
+import { useInert } from "../hooks/useInert";
+
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -10,6 +12,8 @@ type ModalProps = {
 };
 
 export function Modal({ isOpen, onClose, children }: ModalProps) {
+  useInert(isOpen);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
