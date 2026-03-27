@@ -8,7 +8,7 @@ import {
   Text,
   TextStyle,
 } from "pixi.js";
-import { useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 
 import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
@@ -87,7 +87,7 @@ function getTokenCenterCell(position: Vector2, tokenSize: number): GridCell {
  * cells/sec. The parent `onMove` callback is called only when the animation
  * completes. The path line's origin follows the token's centre during movement.
  */
-export const TokenDisplay = ({
+export const TokenDisplay = memo(function TokenDisplay({
   token,
   position,
   gridSize,
@@ -96,7 +96,7 @@ export const TokenDisplay = ({
   movementSpeed = 5,
   obstacles = [],
   onContextMenu,
-}: Readonly<TokenDisplayProps>) => {
+}: Readonly<TokenDisplayProps>) {
   const { app } = useApplication();
   const { camera } = useCamera();
 
@@ -360,4 +360,4 @@ export const TokenDisplay = ({
       )}
     </pixiContainer>
   );
-};
+});

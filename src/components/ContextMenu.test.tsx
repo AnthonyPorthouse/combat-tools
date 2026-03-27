@@ -46,13 +46,13 @@ describe("ContextMenu", () => {
 
     it("applies danger text style to items with danger=true", () => {
       renderMenu();
-      const deleteBtn = screen.getByRole("button", { name: "Delete" });
+      const deleteBtn = screen.getByRole("menuitem", { name: "Delete" });
       expect(deleteBtn.className).toContain("text-red-400");
     });
 
     it("does not apply danger text style to normal items", () => {
       renderMenu();
-      const editBtn = screen.getByRole("button", { name: "Edit" });
+      const editBtn = screen.getByRole("menuitem", { name: "Edit" });
       expect(editBtn.className).not.toContain("text-red-400");
       expect(editBtn.className).toContain("text-slate-200");
     });
@@ -61,13 +61,13 @@ describe("ContextMenu", () => {
   describe("item interaction", () => {
     it("calls item.onClick when an item button is clicked", () => {
       const { items } = renderMenu();
-      fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
       expect(items[0].onClick).toHaveBeenCalledOnce();
     });
 
     it("calls onClose after an item is clicked", () => {
       const { onClose } = renderMenu();
-      fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Edit" }));
       expect(onClose).toHaveBeenCalledOnce();
     });
   });
@@ -103,7 +103,7 @@ describe("ContextMenu", () => {
     it("does not close when mousedown fires inside the menu", () => {
       const { onClose } = renderMenu();
       vi.runAllTimers();
-      fireEvent.mouseDown(screen.getByRole("button", { name: "Edit" }));
+      fireEvent.mouseDown(screen.getByRole("menuitem", { name: "Edit" }));
       expect(onClose).not.toHaveBeenCalled();
     });
   });
