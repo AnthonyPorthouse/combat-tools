@@ -309,4 +309,28 @@ describe("findPath", () => {
     expect(path).not.toBeNull();
     expect(path![path!.length - 1]).toEqual({ col: 3, row: 3 });
   });
+
+  it("takes a straight path when intervening token is not in obstacles (group move)", () => {
+    // Token A at (0,0) moves to (4,0); Token B (co-selected) sits at (2,0).
+    // With Token B excluded from obstacles, A should path straight through (2,0).
+    const occupied = buildOccupiedCells([]); // B excluded — simulates group move
+    const grid = makeMoverGrid(occupied, 1);
+    const path = findPath({ col: 0, row: 0 }, { col: 4, row: 0 }, grid);
+    expect(path).not.toBeNull();
+    expect(path!.length).toBe(4); // straight line, Chebyshev distance = 4
+    expect(path![path!.length - 1]).toEqual({ col: 4, row: 0 });
+  });
+
+  it("detours when intervening token IS in obstacles (non-group move)", () => {
+    // Same scenario but Token B IS an obstacle — path must avoid (2,0).
+    const occupied = buildOccupiedCells([{ position: { x: 2, y: 0 }, size: 1 }]);
+    const grid = makeMoverGrid(occupied, 1);
+    const path = findPath({ col: 0, row: 0 }, { col: 4, row: 0 }, grid);
+    expect(path).not.toBeNull();
+    // Path must not pass through the blocked cell
+    expect(path!.some((c) => c.col === 2 && c.row === 0)).toBe(false);
+    for (const cell of path!) {
+      expect(grid.isPassable(cell.col, cell.row)).toBe(true);
+    }
+  });
 });

@@ -338,8 +338,13 @@ function CombatContent() {
         <ErrorBoundary fallback={BOARD_FALLBACK}>
           <Board container={containerEl} gridSize={GRID_SIZE}>
             {tokenPlacementsList.map(({ token, position }) => {
+              const isSelected = selectedIds.has(token.id);
               const obstacles = tokenPlacementsList
-                .filter((p) => p.token.id !== token.id)
+                .filter((p) => {
+                  if (p.token.id === token.id) return false;
+                  if (isSelected && selectedIds.has(p.token.id)) return false;
+                  return true;
+                })
                 .map((p) => ({ position: p.position, size: p.token.size }));
 
               return (
