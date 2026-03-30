@@ -9,7 +9,7 @@ RUN npm ci
 
 RUN npm run build
 
-FROM nginx:alpine
+FROM nginxinc/nginx-unprivileged:alpine
 
 WORKDIR /app
 

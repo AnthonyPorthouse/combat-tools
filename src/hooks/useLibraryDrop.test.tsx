@@ -4,6 +4,7 @@ import type { DragEvent } from "react";
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
 
 import { CameraProvider } from "../contexts/CameraProvider";
@@ -50,7 +51,7 @@ function renderDrop(
   overrides: Partial<{
     containerRef: RefObject<HTMLDivElement | null>;
     draggedTokenRef: RefObject<Token | null>;
-    onDrop: ReturnType<typeof vi.fn>;
+    onDrop: (token: Token, position: Vector2) => void;
   }> = {},
 ) {
   const containerRef = overrides.containerRef ?? makeContainerRef();
