@@ -1,4 +1,4 @@
-import type { Vector2 } from "../lib/vector2";
+import type { Vector2 } from "@combat-tools/vectors";
 
 export type CameraState = {
   zoom: number;

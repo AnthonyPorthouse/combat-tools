@@ -1,10 +1,10 @@
+import type { Vector2 } from "@combat-tools/vectors";
 import type { RefObject } from "react";
 import type { DragEvent } from "react";
 
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
 
 import { CameraProvider } from "../contexts/CameraProvider";

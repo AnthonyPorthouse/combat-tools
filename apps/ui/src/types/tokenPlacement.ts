@@ -1,4 +1,5 @@
-import type { Vector2 } from "../lib/vector2";
+import type { Vector2 } from "@combat-tools/vectors";
+
 import type { Token } from "./token";
 
 export type TokenPlacement = {

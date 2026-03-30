@@ -1,8 +1,8 @@
+import type { Vector2 } from "@combat-tools/vectors";
 import type { Application } from "pixi.js";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
 
 import {

@@ -1,9 +1,8 @@
+import type { Vector2 } from "@combat-tools/vectors";
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 
 import { useCallback, useState } from "react";
 import { expect, fn, waitFor } from "storybook/test";
-
-import type { Vector2 } from "../lib/vector2";
 
 import { CameraProvider } from "../contexts/CameraProvider";
 import { createToken, type Token, type TokenSize } from "../types/token";

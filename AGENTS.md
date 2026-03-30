@@ -3,8 +3,8 @@
 ## Setup commands
 
 - Install deps: `npm install`
-- Start dev server: `npm run dev`
-- Lint code: `npm run lint`
+- Start dev server: `npx turbo dev`
+- Lint code: `npx turbo lint`
 
 ## Code style
 
@@ -22,10 +22,10 @@
 ## Review Tasks
 
 - Run `npx tsc -b --noEmit` to verify there are no build errors
-- Run `npm run lint` to verify we have no linting issues
+- Run `npx turbo lint` to verify we have no linting issues
 - Update the `README.md` when new functionality is added, or behaviours are changed
 
 ## Environments
 
-- Developer environment started with `npm run dev`, url is http://localhost:5173
-- Storybook environment started with `npm run storybook`, url is http://localhost:6006
+- Developer environment started with `npx turbo dev`, url is http://localhost:5173
+- Storybook environment started with `npm run -w ui storybook`, url is http://localhost:6006

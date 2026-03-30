@@ -1,6 +1,7 @@
+import type { Vector2 } from "@combat-tools/vectors";
+
 import { createContext } from "react";
 
-import type { Vector2 } from "../lib/vector2";
 import type { CameraState } from "../utils/cameraMath";
 
 export type CameraContextValue = {

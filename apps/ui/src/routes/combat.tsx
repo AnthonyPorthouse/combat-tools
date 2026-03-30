@@ -1,7 +1,8 @@
+import type { Vector2 } from "@combat-tools/vectors";
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
 
 import { Board } from "../components/Board";

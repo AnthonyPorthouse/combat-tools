@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { addVector2, subtractVector2 } from "./vector2";
+import { addVector2, subtractVector2 } from "../src";
 
 describe("addVector2", () => {
   it("adds two vectors component-wise", () => {

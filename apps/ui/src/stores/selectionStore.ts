@@ -1,6 +1,7 @@
+import type { Vector2 } from "@combat-tools/vectors";
+
 import { create } from "zustand";
 
-import type { Vector2 } from "../lib/vector2";
 import type { GridCell } from "../utils/cameraMath";
 
 /**

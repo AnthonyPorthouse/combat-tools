@@ -1,8 +1,8 @@
+import type { Vector2 } from "@combat-tools/vectors";
 import type { DragEvent, RefObject } from "react";
 
 import { useCallback } from "react";
 
-import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
 
 import { createToken } from "../types/token";

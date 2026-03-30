@@ -1,8 +1,8 @@
+import type { Vector2 } from "@combat-tools/vectors";
 import type { Application, Ticker } from "pixi.js";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { Vector2 } from "../lib/vector2";
 import type { GridCell } from "../utils/cameraMath";
 
 const DEFAULT_MOVEMENT_SPEED = 5; // cells per second

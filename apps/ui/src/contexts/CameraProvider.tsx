@@ -1,6 +1,6 @@
+import { addVector2, type Vector2 } from "@combat-tools/vectors";
 import { useCallback, useState, type PropsWithChildren } from "react";
 
-import { addVector2, type Vector2 } from "../lib/vector2";
 import {
   clampZoom,
   MAX_CAMERA_ZOOM,

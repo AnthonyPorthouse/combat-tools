@@ -1,3 +1,5 @@
+import type { Vector2 } from "@combat-tools/vectors";
+
 import { extend, useApplication } from "@pixi/react";
 import {
   Circle,
@@ -10,7 +12,6 @@ import {
 } from "pixi.js";
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 
-import type { Vector2 } from "../lib/vector2";
 import type { Token } from "../types/token";
 import type { GridCell } from "../utils/cameraMath";
 
