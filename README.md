@@ -6,4 +6,5 @@ A custom VTT integration built on top of React and Pixi.JS
 
 - [x] Grid Based VTT
 - [x] Customizable Tokens — tokens support configurable name, size (0.5 / 1 / 2 / 3 / 4 grid squares), and optional portrait images; small (0.5) tokens are centred within their cell
+- [x] Shared pathfinding package — grid-based A\* movement logic now lives in `@combat-tools/pathfinding`, with grid cells represented as `Vector2` semantics (`x` = column, `y` = row)
 - [ ] Persistent Sessions

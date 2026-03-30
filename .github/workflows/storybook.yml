@@ -22,11 +22,11 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run build-storybook
+      - run: npm run -w apps/ui build-storybook
 
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: storybook-static
+          path: ./apps/ui/storybook-static
 
   deploy:
     needs: build
