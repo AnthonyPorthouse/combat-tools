@@ -10,7 +10,23 @@ permissions:
   actions: read
 
 jobs:
-  test-ui:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      node-modules-cache-hit: ${{ steps.cache-node-modules.outputs.cache-hit }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+  test-apps-ui:
+    needs: setup
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +38,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm i
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium --with-deps
@@ -37,3 +53,30 @@ jobs:
         uses: davelosert/vitest-coverage-report-action@v2
         with:
           working-directory: ./apps/ui
+
+  test-packages:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [pathfinding, vectors]
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Run unit tests with coverage
+        run: npm run -w packages/${{ matrix.package }} coverage
+
+      - name: Report coverage to PR
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          name: "packages/${{ matrix.package }}"
+          working-directory: ./packages/${{ matrix.package }}

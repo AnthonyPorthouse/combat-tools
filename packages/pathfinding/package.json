@@ -1,5 +1,5 @@
 {
-  "name": "@combat-tools/vectors",
+  "name": "@combat-tools/pathfinding",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,6 +15,9 @@
     "fmt:check": "oxfmt --check",
     "test": "vitest run",
     "coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@combat-tools/vectors": "*"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

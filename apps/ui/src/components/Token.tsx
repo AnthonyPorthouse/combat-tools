@@ -1,5 +1,12 @@
+import type { GridCell as PathfindingGridCell } from "@combat-tools/pathfinding";
 import type { Vector2 } from "@combat-tools/vectors";
 
+import {
+  buildOccupiedCells,
+  findNearestValidCell,
+  findPath,
+  makeMoverGrid,
+} from "@combat-tools/pathfinding";
 import { extend, useApplication } from "@pixi/react";
 import {
   Circle,
@@ -13,14 +20,13 @@ import {
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { Token } from "../types/token";
-import type { GridCell } from "../utils/cameraMath";
+import type { GridCell as CameraGridCell } from "../utils/cameraMath";
 
 import { useCamera } from "../hooks/useCamera";
 import { useTokenDrag } from "../hooks/useTokenDrag";
 import { useTokenMovement } from "../hooks/useTokenMovement";
 import { useTokenTexture } from "../hooks/useTokenTexture";
 import { useSelectionStore } from "../stores/selectionStore";
-import { buildOccupiedCells, findNearestValidCell, findPath, makeMoverGrid } from "../utils/astar";
 import { worldToScreen } from "../utils/cameraMath";
 
 extend({ Container, Graphics, Sprite, Text });
@@ -83,7 +89,19 @@ type TokenDisplayProps = {
  * - size < 1 : center cell === position cell
  * - size >= 1: offset = Math.floor((size - 1) / 2)
  */
-function getTokenCenterCell(position: Vector2, tokenSize: number): GridCell {
+function toPathfindingGridCell(cell: CameraGridCell): PathfindingGridCell {
+  return { x: cell.col, y: cell.row };
+}
+
+function fromPathfindingGridCell(cell: PathfindingGridCell): CameraGridCell {
+  return { col: cell.x, row: cell.y };
+}
+
+function fromPathfindingGridPath(path: PathfindingGridCell[]): CameraGridCell[] {
+  return path.map(fromPathfindingGridCell);
+}
+
+function getTokenCenterCell(position: Vector2, tokenSize: number): CameraGridCell {
   if (tokenSize < 1) {
     return { col: position.x, row: position.y };
   }
@@ -196,9 +214,15 @@ export const TokenDisplay = memo(function TokenDisplay({
 
       const endCell = getTokenCenterCell(newPosition, token.size);
       const grid = makeMoverGrid(occupiedCells, token.size);
-      const path = findPath(centerCell, endCell, grid);
+      const path = findPath(
+        toPathfindingGridCell(centerCell),
+        toPathfindingGridCell(endCell),
+        grid,
+      );
       if (path === null) return; // destination unreachable — abort silently
-      startAnimation({ x: worldX, y: worldY }, path, newPosition, (fp) => onMove(id, fp));
+      startAnimation({ x: worldX, y: worldY }, fromPathfindingGridPath(path), newPosition, (fp) =>
+        onMove(id, fp),
+      );
     },
     [
       onGroupMoveInitiate,
@@ -213,16 +237,20 @@ export const TokenDisplay = memo(function TokenDisplay({
   );
 
   const resolveTargetCell = useCallback(
-    (raw: GridCell): GridCell => {
+    (raw: CameraGridCell): CameraGridCell => {
       const grid = makeMoverGrid(occupiedCells, token.size);
       // raw is a top-left cell; isPassable expects a center cell
       const center = getTokenCenterCell({ x: raw.col, y: raw.row }, token.size);
       if (grid.isPassable(center.col, center.row)) return raw;
       // Find nearest valid center cell, then convert back to top-left
-      const nearestCenter = findNearestValidCell(center, grid, centerCell);
+      const nearestCenter = findNearestValidCell(
+        toPathfindingGridCell(center),
+        grid,
+        toPathfindingGridCell(centerCell),
+      );
       if (!nearestCenter) return raw;
       const offset = token.size < 1 ? 0 : Math.floor((token.size - 1) / 2);
-      return { col: nearestCenter.col - offset, row: nearestCenter.row - offset };
+      return { col: nearestCenter.x - offset, row: nearestCenter.y - offset };
     },
     [occupiedCells, token.size, centerCell],
   );
@@ -339,9 +367,9 @@ export const TokenDisplay = memo(function TokenDisplay({
       y: screenY + leaderOffset.y,
     };
 
-    let followerTargetCell: GridCell | null = null;
+    let followerTargetCell: CameraGridCell | null = null;
     let followerDropZoneScreenPos: Vector2 | null = null;
-    let followerDragPath: GridCell[] = [];
+    let followerDragPath: CameraGridCell[] = [];
 
     if (groupDragState.leaderTargetCell) {
       // Apply the same grid delta as the leader to find this follower's target
@@ -349,7 +377,7 @@ export const TokenDisplay = memo(function TokenDisplay({
         col: groupDragState.leaderTargetCell.col - groupDragState.leaderPosition.x,
         row: groupDragState.leaderTargetCell.row - groupDragState.leaderPosition.y,
       };
-      const rawTarget: GridCell = {
+      const rawTarget: CameraGridCell = {
         col: position.x + delta.col,
         row: position.y + delta.row,
       };
@@ -372,7 +400,12 @@ export const TokenDisplay = memo(function TokenDisplay({
         token.size,
       );
       const grid = makeMoverGrid(occupiedCells, token.size);
-      followerDragPath = findPath(centerCell, endCenterCell, grid) ?? [];
+      const path = findPath(
+        toPathfindingGridCell(centerCell),
+        toPathfindingGridCell(endCenterCell),
+        grid,
+      );
+      followerDragPath = path ? fromPathfindingGridPath(path) : [];
     }
 
     return { followerGhostScreenPos, followerDropZoneScreenPos, followerDragPath };
@@ -410,12 +443,14 @@ export const TokenDisplay = memo(function TokenDisplay({
 
     const endCell = getTokenCenterCell(forceMoveTarget, token.size);
     const grid = makeMoverGrid(occupiedCells, token.size);
-    const path = findPath(centerCell, endCell, grid);
+    const path = findPath(toPathfindingGridCell(centerCell), toPathfindingGridCell(endCell), grid);
     if (path === null) {
       onGroupMemberSkipped?.(token.id);
       return;
     }
-    startAnimation({ x: worldX, y: worldY }, path, forceMoveTarget, (fp) => onMove(token.id, fp));
+    startAnimation({ x: worldX, y: worldY }, fromPathfindingGridPath(path), forceMoveTarget, (fp) =>
+      onMove(token.id, fp),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forceMoveTarget]);
 
@@ -423,11 +458,16 @@ export const TokenDisplay = memo(function TokenDisplay({
   // Path for drag preview: A* from token's center cell to drop target
   // ---------------------------------------------------------------------------
 
-  const dragPath = useMemo((): GridCell[] => {
+  const dragPath = useMemo((): CameraGridCell[] => {
     if (!targetCell) return [];
     const endCenterCell = getTokenCenterCell({ x: targetCell.col, y: targetCell.row }, token.size);
     const grid = makeMoverGrid(occupiedCells, token.size);
-    return findPath(centerCell, endCenterCell, grid) ?? [];
+    const path = findPath(
+      toPathfindingGridCell(centerCell),
+      toPathfindingGridCell(endCenterCell),
+      grid,
+    );
+    return path ? fromPathfindingGridPath(path) : [];
   }, [targetCell, centerCell, token.size, occupiedCells]);
 
   // ---------------------------------------------------------------------------

@@ -5,6 +5,10 @@
       "outputs": ["dist/**"]
     },
 
+    "coverage": {
+      "dependsOn": ["^coverage"]
+    },
+
     "check-types": {
       "dependsOn": ["^check-types"]
     },

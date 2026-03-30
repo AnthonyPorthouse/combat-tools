@@ -19,6 +19,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@combat-tools/pathfinding": "*",
     "@combat-tools/vectors": "*",
     "@hookform/resolvers": "^5.2.2",
     "@pixi/layout": "^3.2.0",
