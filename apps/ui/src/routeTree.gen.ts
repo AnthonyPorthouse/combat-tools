@@ -8,70 +8,70 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as CombatRouteImport } from "./routes/combat";
-import { Route as IndexRouteImport } from "./routes/index";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as CombatRouteImport } from './routes/combat'
+import { Route as IndexRouteImport } from './routes/index'
 
 const CombatRoute = CombatRouteImport.update({
-  id: "/combat",
-  path: "/combat",
+  id: '/combat',
+  path: '/combat',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/combat": typeof CombatRoute;
+  '/': typeof IndexRoute
+  '/combat': typeof CombatRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/combat": typeof CombatRoute;
+  '/': typeof IndexRoute
+  '/combat': typeof CombatRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/combat": typeof CombatRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/combat': typeof CombatRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/combat";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/combat";
-  id: "__root__" | "/" | "/combat";
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/combat'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/combat'
+  id: '__root__' | '/' | '/combat'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  CombatRoute: typeof CombatRoute;
+  IndexRoute: typeof IndexRoute
+  CombatRoute: typeof CombatRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/combat": {
-      id: "/combat";
-      path: "/combat";
-      fullPath: "/combat";
-      preLoaderRoute: typeof CombatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/combat': {
+      id: '/combat'
+      path: '/combat'
+      fullPath: '/combat'
+      preLoaderRoute: typeof CombatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CombatRoute: CombatRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
