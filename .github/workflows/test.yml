@@ -10,7 +10,7 @@ permissions:
   actions: read
 
 jobs:
-  test:
+  test-ui:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,10 +28,12 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run unit tests with coverage
-        run: npm run coverage
+        run: npm run -w apps/ui coverage
 
       - name: Run Storybook interaction tests
-        run: npm run test:storybook
+        run: npm run -w apps/ui test:storybook
 
       - name: Report coverage to PR
         uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          working-directory: ./apps/ui
