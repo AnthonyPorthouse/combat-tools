@@ -22,7 +22,7 @@ type Story = StoryObj<typeof TokenLibraryOverlay>;
 
 function WithRef(props: { tokens: Token[]; onDragEnd: () => void; onCreateToken: () => void }) {
   const ref = useRef<Token | null>(null);
-  return <TokenLibraryOverlay {...props} draggedTokenRef={ref} />;
+  return <TokenLibraryOverlay onTokenContextMenu={() => {}} {...props} draggedTokenRef={ref} />;
 }
 
 /** No tokens in the library yet. */

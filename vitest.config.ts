@@ -30,8 +30,11 @@ export default defineConfig({
         "src/components/GridOverlay.tsx",
         "src/components/LayoutResizer.tsx",
         "src/components/CursorTracker.tsx",
+        "src/components/LassoSelector.tsx",
         // Route components are thin compositions of PixiJS components
         "src/routes/**",
+        // Pure TypeScript type definitions — no executable code
+        "src/types/tokenPlacement.ts",
       ],
       thresholds: {
         statements: 90,

@@ -21,7 +21,7 @@
 
 ## Review Tasks
 
-- Run `npx tsc --noEmit` to verify there are no build errors
+- Run `npx tsc -b --noEmit` to verify there are no build errors
 - Run `npm run lint` to verify we have no linting issues
 - Update the `README.md` when new functionality is added, or behaviours are changed
 

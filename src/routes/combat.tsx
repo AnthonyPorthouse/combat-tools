@@ -12,6 +12,7 @@ import { CursorTracker } from "../components/CursorTracker";
 import { DebuggerOverlay } from "../components/DebuggerOverlay";
 import { EditTokenModal } from "../components/EditTokenModal";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { LassoSelector } from "../components/LassoSelector";
 import { TokenDisplay } from "../components/Token";
 import { TokenLibraryOverlay } from "../components/TokenLibraryOverlay";
 import { CameraProvider } from "../contexts/CameraProvider";
@@ -19,8 +20,10 @@ import { DebuggerProvider } from "../contexts/DebuggerProvider";
 import { useCamera } from "../hooks/useCamera";
 import { useDebuggerOverlay } from "../hooks/useDebuggerOverlay";
 import { useLibraryDrop } from "../hooks/useLibraryDrop";
+import { useUndoRedo } from "../hooks/useUndoRedo";
 import { useCombatStore } from "../stores/combatStore";
 import { useLibraryStore } from "../stores/libraryStore";
+import { useSelectionStore } from "../stores/selectionStore";
 import { screenToWorld, worldToGridCell } from "../utils/cameraMath";
 
 export const Route = createFileRoute("/combat")({
@@ -99,6 +102,9 @@ function CombatContent() {
     return () => globalThis.removeEventListener("pointermove", handlePointerMove);
   }, [combatContainerRef, set]);
 
+  // Undo/redo keyboard bindings (Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl+Y)
+  useUndoRedo();
+
   const [showCursorTracker, _setShowCursorTracker] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
@@ -115,6 +121,7 @@ function CombatContent() {
   const tokenPlacements = useCombatStore((state) => state.tokenPlacements);
   const addToken = useCombatStore((state) => state.addToken);
   const moveToken = useCombatStore((state) => state.moveToken);
+  const moveTokens = useCombatStore((state) => state.moveTokens);
   const removeToken = useCombatStore((state) => state.removeToken);
   const updateToken = useCombatStore((state) => state.updateToken);
 
@@ -122,6 +129,121 @@ function CombatContent() {
   const addToLibrary = useLibraryStore((state) => state.addToLibrary);
   const removeFromLibrary = useLibraryStore((state) => state.removeFromLibrary);
   const updateInLibrary = useLibraryStore((state) => state.updateInLibrary);
+
+  // ---------------------------------------------------------------------------
+  // Selection
+  // ---------------------------------------------------------------------------
+
+  const selectedIds = useSelectionStore((state) => state.selectedIds);
+  const setSelection = useSelectionStore((state) => state.setSelection);
+  const clearSelection = useSelectionStore((state) => state.clearSelection);
+
+  // ---------------------------------------------------------------------------
+  // Group move coordination
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Tracks a pending group move: all tokens in the group, their target
+   * positions, and how many animations are still outstanding.
+   *
+   * When `pendingCount` reaches 0, `moveTokens` is called once with all
+   * targets — a single undo step for the entire group move.
+   */
+  const pendingGroupMoveRef = useRef<{
+    targets: Record<string, Vector2>;
+    pendingCount: number;
+  } | null>(null);
+
+  /** Targets dispatched to non-leader followers so their animations start. */
+  const [groupMoveTargets, setGroupMoveTargets] = useState<Record<string, Vector2>>({});
+
+  /**
+   * Called by the leader `TokenDisplay` just before it starts animating.
+   * Computes and dispatches targets to all other selected (non-locked) tokens.
+   */
+  const handleGroupMoveInitiate = useCallback(
+    (leaderId: string, leaderNewPos: Vector2) => {
+      const leaderPlacement = tokenPlacements[leaderId];
+      if (!leaderPlacement || selectedIds.size <= 1) return;
+
+      const delta = {
+        x: leaderNewPos.x - leaderPlacement.position.x,
+        y: leaderNewPos.y - leaderPlacement.position.y,
+      };
+
+      const targets: Record<string, Vector2> = { [leaderId]: leaderNewPos };
+      const followerTargets: Record<string, Vector2> = {};
+
+      for (const id of selectedIds) {
+        if (id === leaderId) continue;
+        const p = tokenPlacements[id];
+        if (!p || p.token.locked) continue;
+        const target = { x: p.position.x + delta.x, y: p.position.y + delta.y };
+        targets[id] = target;
+        followerTargets[id] = target;
+      }
+
+      pendingGroupMoveRef.current = {
+        targets,
+        pendingCount: Object.keys(targets).length,
+      };
+      setGroupMoveTargets(followerTargets);
+    },
+    [tokenPlacements, selectedIds],
+  );
+
+  /**
+   * Called when a follower token cannot reach its group-move target (path === null).
+   * Decrements the pending count and commits the group if all others have settled.
+   */
+  const handleGroupMemberSkipped = useCallback(
+    (id: string) => {
+      const pending = pendingGroupMoveRef.current;
+      if (!pending || !(id in pending.targets)) return;
+      delete pending.targets[id];
+      pending.pendingCount--;
+      if (pending.pendingCount === 0) {
+        const targets = { ...pending.targets };
+        pendingGroupMoveRef.current = null;
+        moveTokens(targets);
+      }
+    },
+    [moveTokens],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Token move commit
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Called by each `TokenDisplay` when its animation completes.
+   *
+   * For group moves: all tokens in the group skip individual commits; the last
+   * one to finish triggers a single `moveTokens` call — one undo step total.
+   *
+   * For single-token moves: delegates directly to `moveToken`.
+   */
+  const handleTokenMove = useCallback(
+    (id: string, newPosition: Vector2) => {
+      const pending = pendingGroupMoveRef.current;
+      if (pending && id in pending.targets) {
+        pending.pendingCount--;
+        if (pending.pendingCount === 0) {
+          const targets = { ...pending.targets };
+          pendingGroupMoveRef.current = null;
+          moveTokens(targets);
+        }
+        // Skip individual commit — group commit will handle it.
+        return;
+      }
+      moveToken(id, newPosition);
+    },
+    [moveToken, moveTokens],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Library drag-drop
+  // ---------------------------------------------------------------------------
 
   const draggedTokenRef = useRef<Token | null>(null);
 
@@ -136,13 +258,6 @@ function CombatContent() {
       }
     },
     [set, remove],
-  );
-
-  const handleTokenMove = useCallback(
-    (id: string, newPosition: Vector2) => {
-      moveToken(id, newPosition);
-    },
-    [moveToken],
   );
 
   const handleLibraryDrop = useCallback(
@@ -223,8 +338,13 @@ function CombatContent() {
         <ErrorBoundary fallback={BOARD_FALLBACK}>
           <Board container={containerEl} gridSize={GRID_SIZE}>
             {tokenPlacementsList.map(({ token, position }) => {
+              const isSelected = selectedIds.has(token.id);
               const obstacles = tokenPlacementsList
-                .filter((p) => p.token.id !== token.id)
+                .filter((p) => {
+                  if (p.token.id === token.id) return false;
+                  if (isSelected && selectedIds.has(p.token.id)) return false;
+                  return true;
+                })
                 .map((p) => ({ position: p.position, size: p.token.size }));
 
               return (
@@ -234,6 +354,10 @@ function CombatContent() {
                   position={position}
                   gridSize={GRID_SIZE}
                   onMove={handleTokenMove}
+                  isSelected={selectedIds.has(token.id)}
+                  onGroupMoveInitiate={handleGroupMoveInitiate}
+                  forceMoveTarget={groupMoveTargets[token.id] ?? null}
+                  onGroupMemberSkipped={handleGroupMemberSkipped}
                   onHoverChange={handleTokenHover}
                   movementSpeed={MOVEMENT_SPEED}
                   obstacles={obstacles}
@@ -241,6 +365,17 @@ function CombatContent() {
                 />
               );
             })}
+            <LassoSelector
+              tokenPlacements={tokenPlacements}
+              gridSize={GRID_SIZE}
+              onLassoSelect={(ids) => {
+                if (ids.length > 0) {
+                  setSelection(ids);
+                } else {
+                  clearSelection();
+                }
+              }}
+            />
             {showCursorTracker && <CursorTracker />}
           </Board>
         </ErrorBoundary>

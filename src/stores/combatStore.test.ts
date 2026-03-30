@@ -80,6 +80,30 @@ describe("useCombatStore", () => {
     });
   });
 
+  describe("moveTokens", () => {
+    it("updates positions of multiple tokens at once", () => {
+      useCombatStore.getState().addToken(goblin, { x: 0, y: 0 });
+      useCombatStore.getState().addToken(dragon, { x: 0, y: 0 });
+      useCombatStore.getState().moveTokens({ t1: { x: 3, y: 4 }, t2: { x: 7, y: 8 } });
+      const { tokenPlacements } = useCombatStore.getState();
+      expect(tokenPlacements["t1"].position).toEqual({ x: 3, y: 4 });
+      expect(tokenPlacements["t2"].position).toEqual({ x: 7, y: 8 });
+    });
+
+    it("is a no-op for ids that do not exist", () => {
+      useCombatStore.getState().addToken(goblin, { x: 0, y: 0 });
+      useCombatStore.getState().moveTokens({ nonexistent: { x: 9, y: 9 } });
+      expect(useCombatStore.getState().tokenPlacements["t1"].position).toEqual({ x: 0, y: 0 });
+    });
+
+    it("only moves tokens whose ids are present in the moves map", () => {
+      useCombatStore.getState().addToken(goblin, { x: 0, y: 0 });
+      useCombatStore.getState().addToken(dragon, { x: 5, y: 5 });
+      useCombatStore.getState().moveTokens({ t1: { x: 2, y: 2 } });
+      expect(useCombatStore.getState().tokenPlacements["t2"].position).toEqual({ x: 5, y: 5 });
+    });
+  });
+
   describe("updateToken", () => {
     it("replaces the token data on an existing placement", () => {
       useCombatStore.getState().addToken(goblin, { x: 0, y: 0 });
